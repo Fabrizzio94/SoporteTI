@@ -1,3 +1,4 @@
+import Link from "next/link";
 export default function Navbar() {
   return (
     <header className="bg-slate-800 text-white px-6 py-3 flex justify-between items-center">
@@ -5,9 +6,9 @@ export default function Navbar() {
         <span className="font-semibold">Levantamiento</span>
 
         <nav className="flex gap-4 text-sm">
-          <a href="/dashboard" className="hover:text-indigo-300">Dashboard</a>
-          <a href="/tecnicos" className="hover:text-indigo-300">Técnicos</a>
-          <a href="/farmacias" className="hover:text-indigo-300">Farmacias</a>
+          <Link href="/dashboard" className="hover:text-indigo-300">Dashboard</Link>
+          <Link href="/tecnicos" className="hover:text-indigo-300">Técnicos</Link>
+          <Link href="/farmacias" className="hover:text-indigo-300">Farmacias</Link>
         </nav>
       </div>
 
