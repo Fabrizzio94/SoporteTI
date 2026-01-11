@@ -28,12 +28,11 @@ export default function TecnicoModal() {
 
             {/* Form */}
             <div className="grid grid-cols-2 gap-4">
-              <input className="text-black border rounded p-2" placeholder="Oficina" />
-              <input className="text-black border rounded p-2" placeholder="Nombre completo" />
+              <input className="text-black border rounded p-2" placeholder="Cédula" />
               <input className="text-black border rounded p-2" placeholder="Usuario" />
+              <input className="text-black border rounded p-2" placeholder="Apellidos" />
+              <input className="text-black border rounded p-2" placeholder="Nombres" />
               <input className="text-black border rounded p-2" placeholder="Celular" />
-              <input className="text-black border rounded p-2" placeholder="Ciudad" />
-              <input className="text-black border rounded p-2" placeholder="Provincia" />
             </div>
 
             {/* Footer */}
