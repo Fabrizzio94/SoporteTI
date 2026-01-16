@@ -4,31 +4,29 @@ import TecnicosTable from "@/app/components/tecnicos/TecnicosTable";
 import TecnicoModal from "@/app/components/tecnicos/TecnicosModal";
 import TecnicoSearch from "@/app/components/tecnicos/TecnicoSearch";
 import { Tecnico } from "@/app/types/tecnico";
-import { useState } from "react";
-export const MOCK_TECNICOS: Tecnico[] = [
-  {
-    cedula: "1723373765",
-    nombre: "JHONNY FABRICIO CHAMBA LOPEZ",
-    usuario: "jchamba",
-    celular: "0985352667",
-    activo: true,
-  },
-  {
-    cedula: "1105542417",
-    nombre: "MARITZA ALEXANDRA VITERI ENRIQUEZ",
-    usuario: "maviterie",
-    celular: "0985352667",
-    activo: true,
-  },
-];
-
+import { useState, useEffect } from "react";
 
 export default function TecnicosPage() {
   const [search, setSearch] = useState("");
-  const filtered = MOCK_TECNICOS.filter((t) =>
-  t.nombre.toLowerCase().includes(search.toLowerCase()) ||
-  t.cedula.includes(search) ||
-  t.usuario.toLowerCase().includes(search.toLowerCase())
+  const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
+  const [editingTecnico, setEditingTecnico] = useState<Tecnico | null>(null);
+  useEffect(()=> {
+    fetch("/api/tecnicos")
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)){
+        setTecnicos(data);
+      }else{
+        console.error("API devolvio error: ", data);
+        setTecnicos([]);
+      }
+    });
+  }, []);
+  
+   const filtered = tecnicos.filter(t =>
+    t.nombreCompleto?.toLowerCase().includes(search.toLowerCase()) ||
+    t.cedula.includes(search) ||
+    t.usuario.toLowerCase().includes(search.toLowerCase())
   );
   return (
     <main className="p-6">
@@ -36,10 +34,22 @@ export default function TecnicosPage() {
 
       <div className="flex justify-between items-center mb-4">
         <TecnicoSearch onSearch={setSearch}/>
-        <TecnicoModal />
+        <TecnicoModal
+          tecnico ={editingTecnico}
+          onClose={() => setEditingTecnico(null)}
+          onSaved={() => {
+              setEditingTecnico(null);
+              fetch("/api/tecnicos")
+              .then(res=> res.json())
+              .then(data => setTecnicos(data))
+          }}
+        />
       </div>
 
-      <TecnicosTable tecnicos={filtered}/>
+      <TecnicosTable 
+        tecnicos={filtered}
+        onEdit={setEditingTecnico} 
+      />
     </main>
   );
 }

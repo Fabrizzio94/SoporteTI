@@ -1,7 +1,9 @@
 export interface Tecnico {
   cedula: string;
-  nombre: string;
-  usuario: string;
+  nombres: string;
+  apellidos: string;
+  nombreCompleto?: string;
   celular: string;
-  activo: boolean;
+  estado: string;
+  usuario: string;
 }
