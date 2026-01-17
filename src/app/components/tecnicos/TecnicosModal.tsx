@@ -3,12 +3,13 @@
 import { Tecnico } from "@/app/types/tecnico";
 import { useEffect, useState } from "react";
 type Props = {
+    open: boolean;
     tecnico?: Tecnico | null;
     onClose: () => void;
     onSaved: () => void;
   }
-export default function TecnicoModal({tecnico, onClose, onSaved}: Props) {
-  const [open, setOpen] = useState(false);
+export default function TecnicoModal({tecnico, onClose, onSaved, open}: Props) {
+  //const [open, setOpen] = useState(false);
   const [cedula, setCedula] = useState("");
   const [nombres, setNombres] = useState("");
   const [apellidos, setApellidos] = useState("");
@@ -49,7 +50,7 @@ export default function TecnicoModal({tecnico, onClose, onSaved}: Props) {
         });
       }
       //toast.success("Guardado correctamente");
-      setOpen(false);
+      //setOpen(false);
       onSaved();
   }catch(error){
     console.error("Error de red:", error);
@@ -59,12 +60,7 @@ export default function TecnicoModal({tecnico, onClose, onSaved}: Props) {
   //if(!open) return null;
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="bg-indigo-600 text-white px-4 py-2 rounded-md"
-      >
-        + Agregar
-      </button>
+      
 
       {open && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
@@ -73,7 +69,7 @@ export default function TecnicoModal({tecnico, onClose, onSaved}: Props) {
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg text-black font-semibold">{tecnico ? "Editar Técnico" : "Agregar Técnico"}</h2>
-              <button onClick={() => setOpen(false)} className="text-black">
+              <button className="text-black">
                 ✕
               </button>
             </div>
@@ -126,7 +122,6 @@ export default function TecnicoModal({tecnico, onClose, onSaved}: Props) {
             {/* Footer */}
             <div className="flex justify-end gap-2 mt-6">
               <button
-                onClick={() => setOpen(false)}
                 className="px-4 py-2 border rounded-md text-black"
               >
                 Cerrar

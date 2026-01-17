@@ -10,6 +10,22 @@ export default function TecnicosPage() {
   const [search, setSearch] = useState("");
   const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
   const [editingTecnico, setEditingTecnico] = useState<Tecnico | null>(null);
+  const [tecnicoSeleccionado, setTecnicoSeleccionado] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  const handleAgregar = () => {
+    setTecnicoSeleccionado(null);
+    setOpen(true);
+  }
+
+  /* const handleEditar = (tecnicos) => {    
+    setTecnicoSeleccionado(tecnicos);
+    setOpen(true);
+  } */
+  const handleClose = () => {
+    setOpen(false);
+    setTecnicoSeleccionado(null);
+  }
   useEffect(()=> {
     fetch("/api/tecnicos")
     .then(res => res.json())
@@ -31,10 +47,19 @@ export default function TecnicosPage() {
   return (
     <main className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Técnicos</h1>
-
+      <div className="flex justify-between mb-4">
+        <div />
+        <button
+          onClick={handleAgregar}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md"
+        >
+          + Agregar
+        </button>
+      </div>
       <div className="flex justify-between items-center mb-4">
         <TecnicoSearch onSearch={setSearch}/>
         <TecnicoModal
+          open={open}
           tecnico ={editingTecnico}
           onClose={() => setEditingTecnico(null)}
           onSaved={() => {
