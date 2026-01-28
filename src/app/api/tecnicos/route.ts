@@ -32,10 +32,11 @@ export async function GET() {
 // POST
 export async function POST(req:Request) {
   try {
-    const body = await req.json();
-    const { cedula, nombres, apellidos, celular, estado, usuario} = await req.json();
-
-    await pool.request()
+    //const body = await req.json();
+    const { cedula, nombres, apellidos, celular, usuario} = await req.json();
+    const pool = await getConnection();
+    const request = await pool.request();
+    await request
     .input("cedula", cedula)
     .input("nombres",nombres)
     .input("apellidos",apellidos)
@@ -48,6 +49,7 @@ export async function POST(req:Request) {
       `);
     return NextResponse.json({ok:true});
 } catch(error) {
+    console.log(error);
     return NextResponse.json(
       { error: "Error al insertar registro" },
       { status: 500 }
@@ -59,11 +61,13 @@ export async function POST(req:Request) {
 interface PutContext {
   params: Promise<{cedula: string,nombres:string,apellidos:string,celular:string,estado:string}>
 }
-export async function PUT(req:Request, {params}: PutContext) {
+export async function PUT(req:Request) {
   try {
-    const { cedula } = await params;
-    const { nombres, apellidos, celular,estado } = await req.json();
-    await pool.request()
+    //const { cedula } = await params;
+    const { cedula, nombres, apellidos, celular,estado } = await req.json();
+    const pool = await getConnection();
+    const request = await pool.request();
+    await request
     .input("cedula", cedula)
     .input("nombres", nombres)
     .input("apellidos", apellidos)

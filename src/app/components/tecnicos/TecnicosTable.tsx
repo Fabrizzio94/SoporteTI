@@ -9,22 +9,8 @@ type PropsTecnicosTabla = {
 }
 
 export default function TecnicosTable({tecnicos, onEdit}: PropsTecnicosTabla) { // {tecnicos}: {PropsTecnicosListar}
-  const [open, setOpen] = useState(false);
-  const [tecnicoSeleccionado, setTecnicoSeleccionado] = useState(null);
-
-  const handleAgregar = () => {
-    setTecnicoSeleccionado(null);
-    setOpen(true);
-  }
-
-  /* const handleEditar = (tecnicos) => {    
-    setTecnicoSeleccionado(tecnicos);
-    setOpen(true);
-  } */
-  const handleClose = () => {
-    setOpen(false);
-    setTecnicoSeleccionado(null);
-  }
+  //const [open, setOpen] = useState(false);
+  //const [tecnicoSeleccionado, setTecnicoSeleccionado] = useState(null);
 
   return (
     <>   
@@ -56,11 +42,6 @@ export default function TecnicosTable({tecnicos, onEdit}: PropsTecnicosTabla) { 
                 </td>
                 <td className="px-4 py-2">
                   <button className="p-2 hover:bg-gray-100 rounded" title="Editar" onClick={() => onEdit(t)}>
-                  {/*<button 
-                    className="text-blue-600 hover:underline">
-                    onClick={() => onEdit(tecnico)}> 
-                    Editar
-                  </button>*/}
                     <span className="text-blue-600 hover:underline">
                       <img src="/editicon.svg" alt="Editar" className="w-5 h5 hover:text-blue-600"/>
                     </span>

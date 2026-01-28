@@ -2,6 +2,7 @@
 
 import { Tecnico } from "@/app/types/tecnico";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 type Props = {
     open: boolean;
     tecnico?: Tecnico | null;
@@ -22,46 +23,51 @@ export default function TecnicoModal({tecnico, onClose, onSaved, open}: Props) {
       setNombres(tecnico.nombres);
       setApellidos(tecnico.apellidos);
       setUsuario(tecnico.usuario);
-      // setCelular(tecnico.celular); // Asegúrate que tu tipo Tecnico tenga celular
+      setCelular(tecnico.celular); 
       setEstado(tecnico.estado);
       //setOpen(true); // Abrir si recibimos un técnico para editar
+    } else{ 
+      setCedula("");
+      setNombres("");
+      setApellidos("");
+      setUsuario("");
+      setCelular("");
     }
-  }, [tecnico]);
+  }, [tecnico, open]);
 
   const handleSubmit = async () => {
+    if (!cedula || !nombres || !apellidos || !usuario) {
+      //alert("Por favor, complete los campos obligatorios");
+      toast.error("Por favor, complete los campos obligatorios");
+      return;
+    }
+    const loadingToast = toast.loading("Guardando Registro...")
     try {
-      const bodyData = { cedula, nombres, apellidos, celular, estado, usuario };
-      if(tecnico) {
-        if (!nombres || !apellidos || !cedula) {
-          //toast.error("Campos obligatorios incompletos");
-          return;
-        }
-
-        await fetch(`/api/tecnicos/${tecnico.cedula}`, {
-          method: "PUT", // update
+        const isEditing = !!tecnico;
+        const url = '/api/tecnicos';
+        const method = isEditing ? "PUT" : "POST";
+        const response = await fetch(url, {
+          method: method,
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(bodyData),
+          body: JSON.stringify({ cedula, nombres, apellidos, celular, estado, usuario}),
         });
-      }else{
-        await fetch("/api/tecnicos", {
-          method:"POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify(bodyData),
-        });
-      }
-      //toast.success("Guardado correctamente");
-      //setOpen(false);
-      onSaved();
-  }catch(error){
-    console.error("Error de red:", error);
+        if(response.ok) {
+          toast.success(tecnico ? "Actualizado correctamente": "Creado correctamente", {
+            id: loadingToast,
+          });
+          onSaved();
+        } else {
+          throw new Error("Error en la respuesta");
+        }
+    }
+    catch(error) {
+      toast.error("Hubo un error al procesar la solicitud",{
+        id: loadingToast,
+      });
+    }
   }
-    
-  };
-  //if(!open) return null;
   return (
     <>
-      
-
       {open && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto">
@@ -69,7 +75,7 @@ export default function TecnicoModal({tecnico, onClose, onSaved, open}: Props) {
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg text-black font-semibold">{tecnico ? "Editar Técnico" : "Agregar Técnico"}</h2>
-              <button className="text-black">
+              <button className="text-black" onClick={onClose}>
                 ✕
               </button>
             </div>
@@ -108,21 +114,20 @@ export default function TecnicoModal({tecnico, onClose, onSaved, open}: Props) {
                     onChange={(e)=> setCelular(e.target.value)}
               />
               {tecnico && (
-                <input 
-                    className="text-black border rounded p-2"
-                    placeholder="estado" 
+                
+                  <select className="text-black border rounded p-2"
                     value={estado}
-                    onChange={(e)=> setCelular(e.target.value)}
-                />
+                    onChange={(e) => setEstado(e.target.value)}>
+                      <option value="A">Activo</option>
+                      <option value="I">Inactivo</option>
+                  </select>
               )}
-
-              
             </div>
-
             {/* Footer */}
             <div className="flex justify-end gap-2 mt-6">
               <button
                 className="px-4 py-2 border rounded-md text-black"
+                onClick={onClose}
               >
                 Cerrar
               </button>
