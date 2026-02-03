@@ -15,7 +15,7 @@ export async function GET() {
         estado,
         usuario
       FROM tecnicos
-      ORDER BY nombres asc
+      ORDER BY apellidos asc
     `);
       const data = result.recordset.map(t => ({
         ...t,

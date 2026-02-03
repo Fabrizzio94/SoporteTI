@@ -1,6 +1,4 @@
-"use client";
-
-export default function TecnicoSearch({
+export default function FarmaciasSearch({
   onSearch,
 }: {
   onSearch: (v: string) => void;
@@ -8,7 +6,7 @@ export default function TecnicoSearch({
   return (
     <input
       type="text"
-      placeholder="Buscar técnico..."
+      placeholder="Buscar farmacia..."
       className="border rounded px-3 py-2 w-64"
       onChange={(e) => onSearch(e.target.value)}
     />
