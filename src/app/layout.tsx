@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/layout/Navbar";
+// providers
+import { AuthProviders } from "./providers/auth-provider";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import NavbarWrapper from "./components/navbarWrapper/NavBarWrapper";
@@ -30,16 +32,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          defaultTheme="system" // detecta del sistema el modo oscuro/luz
-          enableSystem={true} // Esto habilita la detección
-          disableTransitionOnChange
-        >
-          <NavbarWrapper />
-          {/* <Navbar /> */}
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <AuthProviders>
+          <ThemeProvider
+            defaultTheme="system" // detecta del sistema el modo oscuro/luz
+            enableSystem={true} // Esto habilita la detección
+            disableTransitionOnChange
+          >
+            <NavbarWrapper />
+            {/* <Navbar /> */}
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </AuthProviders>
       </body>
     </html>
   );

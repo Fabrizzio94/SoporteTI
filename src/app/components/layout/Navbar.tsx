@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
+import { Usuario } from "@/app/types/tecnico";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
+
+  // Si no hay sesión (usuario no logueado), no mostramos el menú de usuario
+  if (!session) return null;
 
   return (
     <header className="bg-slate-800 text-white px-6 py-3 flex justify-between items-center">
-      
       {/* Lado izquierdo */}
       <div className="flex items-center gap-6">
-        {/* Logo / Icono */}
         <div className="flex items-center gap-2 font-semibold">
           <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center">
             ⚙️
@@ -19,14 +23,18 @@ export default function Navbar() {
           <span>Soporte TI</span>
         </div>
 
-        {/* Navegación */}
         <nav className="flex gap-4 text-sm">
           <Link href="/dashboard" className="hover:text-indigo-300">
             Dashboard
           </Link>
-          <Link href="/tecnicos" className="hover:text-indigo-300">
-            Técnicos
-          </Link>
+
+          {/* RESTRICCIÓN: Solo el COORDINADOR ve la pestaña Técnicos */}
+          {(session.user as Usuario).role === "COORDINADOR" && (
+            <Link href="/tecnicos" className="hover:text-indigo-300">
+              Técnicos
+            </Link>
+          )}
+
           <Link href="/farmacias" className="hover:text-indigo-300">
             Farmacias
           </Link>
@@ -37,26 +45,34 @@ export default function Navbar() {
       <div className="relative">
         <button
           onClick={() => setOpen(!open)}
-          className="flex items-center gap-2 focus:outline-none"
+          className="flex items-center gap-2 focus:outline-none group"
         >
-          {/* Avatar */}
-          <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-sm">
-            JC
+          <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-sm font-bold uppercase">
+            {/* Iniciales dinámicas */}
+            {session.user?.name?.substring(0, 2)}
           </div>
-          <span className="text-sm">Jhonny Chamba</span>
+          <div className="flex flex-col items-start leading-tight">
+            <span className="text-sm">{session.user?.name}</span>
+            <span className="text-[10px] text-indigo-300 uppercase">
+              {(session.user as Usuario).role}
+            </span>
+          </div>
         </button>
 
         {/* Dropdown */}
         {open && (
-          <div className="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded shadow-lg overflow-hidden z-50">
-            <button className="w-full text-left px-4 py-2 hover:bg-gray-100">
+          <div className="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded shadow-lg border border-gray-100 overflow-hidden z-50">
+            <div className="px-4 py-2 bg-gray-50 text-[11px] text-gray-500 font-bold uppercase">
+              Opciones
+            </div>
+            <button className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm">
               Mi perfil
             </button>
-            {/* <button className="w-full text-left px-4 py-2 hover:bg-gray-100">
-              Configuración
-            </button> */}
             <hr />
-            <button className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100">
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 text-sm font-semibold"
+            >
               Cerrar sesión
             </button>
           </div>

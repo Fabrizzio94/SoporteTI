@@ -67,12 +67,12 @@ export default function FarmaciasPage() {
             />
             <div className="relative w-9 h-5 bg-neutral-quaternary rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600 dark:peer-checked:bg-teal-600"></div>
           </label>
-          <button
+          {/* <button
             onClick={() => setFarmaciaSeleccionada({})}
             className="bg-indigo-600 text-white px-4 py-2 rounded-md"
           >
             + Agregar
-          </button>
+          </button> */}
         </div>
         <FarmaciaModal
           open={!!farmaciasSeleccionada}

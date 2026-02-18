@@ -6,4 +6,12 @@ export interface Tecnico {
   celular: string;
   estado: string;
   usuario: string;
+  password: string;
+  rol: string;
+}
+
+export interface Usuario {
+  name?: string | null;
+  role: string;
+  cedula: string;
 }

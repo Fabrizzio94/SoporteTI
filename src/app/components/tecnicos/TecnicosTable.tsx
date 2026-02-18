@@ -2,7 +2,7 @@
 
 import { Tecnico } from "@/app/types/tecnico";
 import { useState } from "react";
-
+import Image from "next/image";
 type PropsTecnicosTabla = {
   tecnicos: Tecnico[];
   onEdit: (tecnico: Tecnico) => void;
@@ -21,7 +21,8 @@ export default function TecnicosTable({
               <th className="pl-20 text-black text-left">Cedúla</th>
               <th className="p-2 text-black text-left">Técnico</th>
               <th className="p-2 text-black text-left">Usuario</th>
-              <th className="p-2 text-black text-left">Celular</th>
+              <th className="p-2 text-black text-left">Contraseña</th>
+              <th className="p-2 text-black text-left">Rol</th>
               <th className="p-2 text-black text-left">Estado</th>
               <th className="p-2 text-black text-left"></th>
             </tr>
@@ -34,7 +35,24 @@ export default function TecnicosTable({
                   {t.nombreCompleto}
                 </td>
                 <td className="p-2 text-gray-500">{t.usuario}</td>
-                <td className="p-2">{t.celular}</td>
+                <td className="p-2">
+                  {t.password ? (
+                    <Image
+                      src="/check.svg"
+                      alt="Configurada"
+                      width={"33"}
+                      height={"10"}
+                    />
+                  ) : (
+                    <Image
+                      src="/remove.svg"
+                      alt="Pendiente"
+                      width={"27"}
+                      height={"10"}
+                    />
+                  )}
+                </td>
+                <td className="p-2">{t.rol}</td>
                 <td className="p-2">
                   <span
                     className={`${
