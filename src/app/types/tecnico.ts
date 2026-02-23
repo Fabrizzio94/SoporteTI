@@ -1,10 +1,17 @@
 export interface Tecnico {
-  id: number;
-  oficina: string;
-  nombre: string;
-  usuario: string;
+  cedula: string;
+  nombres: string;
+  apellidos: string;
+  nombreCompleto?: string;
   celular: string;
-  ciudad: string;
-  provincia: string;
-  activo: boolean;
+  estado: string;
+  usuario: string;
+  password: string;
+  rol: string;
+}
+
+export interface Usuario {
+  name?: string | null;
+  role: string;
+  cedula: string;
 }
