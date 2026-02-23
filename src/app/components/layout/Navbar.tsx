@@ -1,24 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Usuario } from "@/app/types/tecnico";
-
+import {MonitorCog} from "lucide-react"
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
-
+  const dropdownRef = useRef<HTMLDivElement>(null);
   // Si no hay sesión (usuario no logueado), no mostramos el menú de usuario
+  
+  // Cierra el dropdown al hacer clic afuera
+  useEffect(() => {
+    //if (!session) return null;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [session]);
   if (!session) return null;
-
   return (
-    <header className="bg-slate-800 text-white px-6 py-3 flex justify-between items-center">
+    <header className="sticky top-0 z-40 bg-slate-800 text-white px-6 md:px-6 py-3 md:py-3 flex justify-between items-center">
       {/* Lado izquierdo */}
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2 font-semibold">
-          <div className="w-8 h-8 bg-indigo-600 rounded flex items-center justify-center">
-            ⚙️
+          <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
+            <span className="text-blue-600 hover:underline">
+                      <MonitorCog color="#000000" />
+                    </span>
           </div>
           <span>Soporte TI</span>
         </div>
@@ -42,7 +58,7 @@ export default function Navbar() {
       </div>
 
       {/* Lado derecho */}
-      <div className="relative">
+      <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setOpen(!open)}
           className="flex items-center gap-2 focus:outline-none group"

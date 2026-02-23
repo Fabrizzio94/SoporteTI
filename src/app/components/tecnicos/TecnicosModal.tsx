@@ -26,21 +26,18 @@ export default function TecnicoModal({
   const [password, setPassword] = useState("");
   useEffect(() => {
     if (tecnico) {
-      setCedula(tecnico.cedula);
-      setNombres(tecnico.nombres);
-      setApellidos(tecnico.apellidos);
-      setUsuario(tecnico.usuario);
-      //setCelular(tecnico.password);
-      setEstado(tecnico.estado);
+      setCedula(tecnico.cedula ?? "");
+      setNombres(tecnico.nombres ?? "");
+      setApellidos(tecnico.apellidos ?? "");
+      setUsuario(tecnico.usuario ?? "");
+      setEstado(tecnico.estado ?? "");
       setPassword("");
-      setRol(tecnico.rol);
-      //setOpen(true); // Abrir si recibimos un técnico para editar
+      setRol(tecnico.rol ?? "");
     } else {
       setCedula("");
       setNombres("");
       setApellidos("");
       setUsuario("");
-      //setCelular("");
       setPassword("");
       setRol("");
     }

@@ -33,6 +33,27 @@ export default function FarmaciaModal({
   // variables tecnicos listar fetch
   const [tecnicos, setTecnicos] = useState<Tecnico[]>([]);
   const [cedulaTecnico, setCedulaTecnico] = useState("");
+  // variables datos
+  const listaTecnoTerminales = [
+    "AMD-1",
+    "AMD-2",
+    "AMD-3",
+    "AMD-4",
+    "AMD-5",
+    "GA-690",
+    "GI-945",
+    "OVALADAS",
+    "CPU",
+    "INTCEL-2022",
+    "INTCEL-2025 (v2)",
+    "N/A",
+  ];
+  const listaSoTerminales = [
+    "WIN XP",
+    "WIN 10",
+    "N/A",
+  ];
+  // HOOKS
   useEffect(() => {
     // fetch para traer consulta de tecnicos
     if (open) {
@@ -51,18 +72,17 @@ export default function FarmaciaModal({
   }, [open]);
   useEffect(() => {
     if (farmacia) {
-      setOficina(farmacia.oficina);
-      setNombre(farmacia.nombre);
+      setOficina(farmacia.oficina ?? "");
+      setNombre(farmacia.nombre ?? "");
       setCedulaTecnico(farmacia.cedula_tecnico || "");
-      setTipoFarmacia(farmacia.tipo_farmacia);
-      setMarca(farmacia.marca);
-      setAnoApertura(farmacia.ano_apertura);
-      setTecnologiaTerminales(farmacia.tecnologia_terminales);
-      setSoTerminales(farmacia.ssoo_terminales);
+      setTipoFarmacia(farmacia.tipo_farmacia ?? "");
+      setMarca(farmacia.marca ?? "");
+      setAnoApertura(farmacia.ano_apertura ?? "");
+      setTecnologiaTerminales(farmacia.tecnologia_terminales ?? "");
+      setSoTerminales(farmacia.ssoo_terminales ?? "");
       setNumPuntoVenta(farmacia.num_puntos_venta || 0);
-      setTipoRack(farmacia.tipo_rack);
-      setEstado(farmacia.estado);
-      console.log(farmacia.cedula_tecnico); // Abrir si recibimos un técnico para editar
+      setTipoRack(farmacia.tipo_rack ?? "");
+      setEstado(farmacia.estado ?? "");
     } else {
       setOficina("");
       setNombre("");
@@ -144,28 +164,22 @@ export default function FarmaciaModal({
                 className="text-black border rounded p-2"
                 placeholder="Oficina"
                 value={oficina}
-                onChange={(e) => setOficina(e.target.value)}
+                readOnly
                 disabled={!!farmacia}
               />
               <input
                 className="text-black border rounded p-2"
                 placeholder="Nombre Farmacia"
                 value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
+                readOnly
+                disabled
               />
-
-              <select
+              <input
                 className="text-black border rounded p-2"
-                value={cedulaTecnico}
-                onChange={(e) => setCedulaTecnico(e.target.value)}
-              >
-                <option value="">Técnico</option>
-                {tecnicos.map((t) => (
-                  <option key={t.cedula} value={t.cedula}>
-                    {t.nombreCompleto}
-                  </option>
-                ))}
-              </select>
+                value={tecnicos.find(t => t.cedula === cedulaTecnico)?.nombreCompleto ?? "Sin Tecnico Asignado"}
+                readOnly
+                disabled
+              />
               <select
                 className="text-black border rounded p-2"
                 value={tipoFarmacia}
@@ -178,7 +192,8 @@ export default function FarmaciaModal({
                 className="text-black border rounded p-2"
                 placeholder="Marca"
                 value={marca}
-                onChange={(e) => setMarca(e.target.value)}
+                readOnly
+                disabled
               />
               <input
                 className="text-black border rounded p-2"
@@ -186,18 +201,28 @@ export default function FarmaciaModal({
                 value={anoApertura}
                 onChange={(e) => setAnoApertura(e.target.value)}
               />
-              <input
+              <select 
                 className="text-black border rounded p-2"
-                placeholder="Tecn. Terminales"
                 value={tecnologiaTerminales}
-                onChange={(e) => setTecnologiaTerminales(e.target.value)}
-              />
-              <input
+                onChange={(e) => setTecnologiaTerminales(e.target.value)}>
+                  {listaTecnoTerminales.map((item, index)=> (
+                    <option value={item} key={index}>{item}</option>
+                  ))}
+              </select>
+              {/* <input
                 className="text-black border rounded p-2"
                 placeholder="SO Terminales"
                 value={soTerminales}
                 onChange={(e) => setSoTerminales(e.target.value)}
-              />
+              /> */}
+              <select 
+                className="text-black border rounded p-2"
+                value={soTerminales}
+                onChange={(e) => setSoTerminales(e.target.value)}>
+                  {listaSoTerminales.map((item, index)=> (
+                    <option value={item} key={index}>{item}</option>
+                  ))}
+              </select>
               <input
                 className="text-black border rounded p-2"
                 placeholder="# PDV"
@@ -206,12 +231,15 @@ export default function FarmaciaModal({
                   setNumPuntoVenta(parseInt(e.target.value) || 0)
                 }
               />
-              <input
+              <select 
                 className="text-black border rounded p-2"
-                placeholder="Tipo Rack"
                 value={tipoRack}
-                onChange={(e) => setTipoRack(e.target.value)}
-              />
+                onChange={(e) => setTipoRack(e.target.value)}>
+                  <option value="SIN RACK">SIN RACK</option>
+                  <option value="2 NIVELES">2 NIVELES</option>
+                  <option value="3 NIVELES">3 NIVELES</option>
+                  <option value="GABINETE">GABINETE</option>
+              </select>
               {farmacia && (
                 <select
                   className="text-black border rounded p-2"

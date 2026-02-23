@@ -1,8 +1,7 @@
 "use client";
 
 import { Tecnico } from "@/app/types/tecnico";
-import { useState } from "react";
-import Image from "next/image";
+import { CircleCheck, CircleX, UserRoundPen } from 'lucide-react';
 type PropsTecnicosTabla = {
   tecnicos: Tecnico[];
   onEdit: (tecnico: Tecnico) => void;
@@ -15,11 +14,11 @@ export default function TecnicosTable({
   return (
     <>
       <div className="border rounded">
-        <table className="w-full table-fixed text-sm">
+        <table className="w-full text-sm table-auto">
           <thead className="bg-gray-100">
             <tr>
               <th className="pl-20 text-black text-left">Cedúla</th>
-              <th className="p-2 text-black text-left">Técnico</th>
+              <th className="p-2 text-black py-2 text-left whitespace-nowrap">Técnico</th>
               <th className="p-2 text-black text-left">Usuario</th>
               <th className="p-2 text-black text-left">Contraseña</th>
               <th className="p-2 text-black text-left">Rol</th>
@@ -31,25 +30,15 @@ export default function TecnicosTable({
             {tecnicos.map((t) => (
               <tr key={t.cedula} className="border-t">
                 <td className="pl-20">{t.cedula}</td>
-                <td className="p-2 truncate max-w-[100px] font-medium">
+                <td className="p-2 font-medium">
                   {t.nombreCompleto}
                 </td>
                 <td className="p-2 text-gray-500">{t.usuario}</td>
-                <td className="p-2">
+                <td className="p-2 text-center">
                   {t.password ? (
-                    <Image
-                      src="/check.svg"
-                      alt="Configurada"
-                      width={"33"}
-                      height={"10"}
-                    />
+                    <CircleCheck className="mx-auto" color="#15cb4c"/>
                   ) : (
-                    <Image
-                      src="/remove.svg"
-                      alt="Pendiente"
-                      width={"27"}
-                      height={"10"}
-                    />
+                    <CircleX className="mx-auto" color="#cc0000"/>
                   )}
                 </td>
                 <td className="p-2">{t.rol}</td>
@@ -71,9 +60,7 @@ export default function TecnicosTable({
                     onClick={() => onEdit(t)}
                   >
                     <span className="text-blue-600 hover:underline">
-                      <img
-                        src="/editicon.svg"
-                        alt="Editar"
+                      <UserRoundPen
                         className="w-5 h5 hover:text-blue-600"
                       />
                     </span>

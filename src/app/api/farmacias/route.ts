@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
 import { getConnection } from "@/lib/db";
-import { pool } from "mssql";
+//import { pool } from "mssql";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+//import { request } from "http";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: "No Autorizado" }, { status: 401 });
     const pool = await getConnection();
-
-    const result = await pool.request().query(`
+    const request = await pool.request();
+    
+    if (!session) return NextResponse.json({ error: "No Autorizado" }, { status: 401 });
+    
+    let result = `
       SELECT 
         f.oficina,
         f.nombre,
@@ -26,10 +29,14 @@ export async function GET() {
         f.estado
       FROM farmacia f
       LEFT JOIN tecnicos t ON f.cedula_tecnico = t.cedula
-      ORDER BY f.nombre ASC
-    `);
-    const data = result.recordset;
-    return NextResponse.json(data);
+    `;
+    if((session?.user as any).role ==="TECNICO"){
+      request.input("cedula_sesion",(session?.user as any).cedula);
+      result += `WHERE f.cedula_tecnico = @cedula_sesion`;
+    }
+    result += ` ORDER BY nombreTecnico ASC`;
+    const data = await request.query(result);
+    return NextResponse.json(data.recordset);
   } catch (error) {
     return NextResponse.json(
       { error: "Error al obtener farmacias" },

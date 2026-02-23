@@ -1,8 +1,7 @@
 "use client";
 
 import { Farmacia } from "@/app/types/farmacia";
-import { useState } from "react";
-import Image from "next/image";
+import { SquarePen } from "lucide-react";
 type PropsFarmaciasTabla = {
   farmacias: Farmacia[];
   onEdit: (farmacia: Farmacia) => void;
@@ -63,11 +62,7 @@ export default function FarmaciasTable({
                     onClick={() => onEdit(t)}
                   >
                     <span className="text-blue-600 hover:underline">
-                      <Image
-                        src="/editicon.svg"
-                        alt="Editar"
-                        width={"5"}
-                        height={"5"}
+                      <SquarePen color="#15416f"
                         className="w-5 h5 hover:text-blue-600"
                       />
                     </span>
