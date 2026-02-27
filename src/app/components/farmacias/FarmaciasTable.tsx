@@ -13,22 +13,36 @@ export default function FarmaciasTable({
 }: PropsFarmaciasTabla) {
   return (
     <>
-      <div className="border rounded">
-        <table className="w-full table-auto text-sm">
-          <thead className="bg-gray-100">
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table className="w-full table-auto text-sm border-collapse">
+          <thead className="bg-gray-100 border-b-2 border-slate-200">
             <tr>
-              <th className="p-2 text-black text-left">Oficina</th>
-              <th className="p-2 text-black text-left">Nombre</th>
-              <th className="p-2 text-black text-left">Tecnico</th>
-              <th className="p-2 text-black text-left">Tipo</th>
-              <th className="p-2 text-black text-left">Marca</th>
-              <th className="p-2 text-black text-left">Año</th>
-              <th className="p-2 text-black text-left">Tecn. Terminales</th>
-              <th className="p-2 text-black text-left">SO Terminales</th>
-              <th className="p-2 text-black text-left"># PDV </th>
-              <th className="p-2 text-black text-left">Tipo Rack</th>
-              <th className="p-2 text-black text-left">Estado</th>
-              <th className="p-2 text-black text-left"></th>
+              {[
+                "Oficina",
+                "Nombre",
+                "Tecnico",
+                "Tipo",
+                "Marca",
+                "Codigo Activo",
+                "Año de Compra",
+                "SSOO Servidor",
+                "Tipo RAM",
+                "RAM (GB)",
+                "Tecn. terminales",
+                "SO terminales",
+                "Virtualizador",
+                "#PDV",
+                "Tipo Rack",
+                "Estado",
+                "",
+              ].map((h) => (
+                <th
+                  key={h}
+                  className="bg-slate-50 text-black-500 text-xs uppercase tracking-wide px-4 py-3 text-left border-b border-slate-100 font-semibold whitespace-nowrap"
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -36,15 +50,20 @@ export default function FarmaciasTable({
               <tr key={t.oficina} className="border-t">
                 <td className="p-2">{t.oficina}</td>
                 <td className="p-2 w-fit">{t.nombre}</td>
-                <td className="p-2 w-fit">{t.nombreTecnico}</td>
+                <td className="p-2 w-fit">{t.nombre_tecnico}</td>
                 <td className="p-2">{t.tipo_farmacia}</td>
                 <td className="p-2">{t.marca}</td>
-                <td className="p-2">{t.ano_apertura}</td>
-                <td className="p-2">{t.tecnologia_terminales}</td>
-                <td className="p-2">{t.ssoo_terminales}</td>
-                <td className="p-2">{t.num_puntos_venta}</td>
-                <td className="p-2">{t.tipo_rack}</td>
-                <td className="p-2">
+                <td className="p-2 font-bold">{t.codigo_servidor}</td>
+                <td className="p-2 text-center">{t.ano_servidor}</td>
+                <td className="p-2 text-center">{t.so_servidor}</td>
+                <td className="p-2 text-center">{t.tipo_ram}</td>
+                <td className="p-2 text-center">{t.ram}</td>
+                <td className="p-2 text-center">{t.tecnologia_terminales}</td>
+                <td className="p-2 text-center">{t.ssoo_terminales}</td>
+                <td className="p-2 text-center">{t.virtualizer}</td>
+                <td className="p-2 text-center">{t.num_puntos_venta}</td>
+                <td className="p-2 text-center">{t.tipo_rack}</td>
+                <td className="p-2 text-center">
                   <span
                     className={`${
                       t.estado === "A"
@@ -62,7 +81,8 @@ export default function FarmaciasTable({
                     onClick={() => onEdit(t)}
                   >
                     <span className="text-blue-600 hover:underline">
-                      <SquarePen color="#15416f"
+                      <SquarePen
+                        color="#15416f"
                         className="w-5 h5 hover:text-blue-600"
                       />
                     </span>

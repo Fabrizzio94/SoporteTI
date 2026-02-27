@@ -4,13 +4,13 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Usuario } from "@/app/types/tecnico";
-import {MonitorCog} from "lucide-react"
+import { MonitorCog } from "lucide-react";
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
   const dropdownRef = useRef<HTMLDivElement>(null);
   // Si no hay sesión (usuario no logueado), no mostramos el menú de usuario
-  
+
   // Cierra el dropdown al hacer clic afuera
   useEffect(() => {
     //if (!session) return null;
@@ -33,8 +33,8 @@ export default function Navbar() {
         <div className="flex items-center gap-2 font-semibold">
           <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
             <span className="text-blue-600 hover:underline">
-                      <MonitorCog color="#000000" />
-                    </span>
+              <MonitorCog color="#000000" />
+            </span>
           </div>
           <span>Soporte TI</span>
         </div>
@@ -53,6 +53,9 @@ export default function Navbar() {
 
           <Link href="/farmacias" className="hover:text-indigo-300">
             Farmacias
+          </Link>
+          <Link href="/activos" className="hover:text-indigo-300">
+            Activos
           </Link>
         </nav>
       </div>

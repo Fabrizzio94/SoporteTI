@@ -23,7 +23,7 @@ export default function FarmaciaModal({
   const [nombreTecnico, setNombreTecnico] = useState("");
   const [tipoFarmacia, setTipoFarmacia] = useState("");
   const [marca, setMarca] = useState("");
-  const [anoApertura, setAnoApertura] = useState("");
+  //const [anoApertura, setAnoApertura] = useState("");
   const [tecnologiaTerminales, setTecnologiaTerminales] = useState("");
   const [soTerminales, setSoTerminales] = useState("");
   const [numPuntosVenta, setNumPuntoVenta] = useState(0);
@@ -48,11 +48,7 @@ export default function FarmaciaModal({
     "INTCEL-2025 (v2)",
     "N/A",
   ];
-  const listaSoTerminales = [
-    "WIN XP",
-    "WIN 10",
-    "N/A",
-  ];
+  const listaSoTerminales = ["WIN XP", "WIN 10", "N/A"];
   // HOOKS
   useEffect(() => {
     // fetch para traer consulta de tecnicos
@@ -77,7 +73,7 @@ export default function FarmaciaModal({
       setCedulaTecnico(farmacia.cedula_tecnico || "");
       setTipoFarmacia(farmacia.tipo_farmacia ?? "");
       setMarca(farmacia.marca ?? "");
-      setAnoApertura(farmacia.ano_apertura ?? "");
+      //setAnoApertura(farmacia.ano_servidor ?? "");
       setTecnologiaTerminales(farmacia.tecnologia_terminales ?? "");
       setSoTerminales(farmacia.ssoo_terminales ?? "");
       setNumPuntoVenta(farmacia.num_puntos_venta || 0);
@@ -89,7 +85,7 @@ export default function FarmaciaModal({
       setCedulaTecnico(""); // combo box con tecnicos existentes
       setTipoFarmacia("Propia");
       setMarca("ECONOMICA");
-      setAnoApertura(date.getFullYear().toString());
+      //setAnoApertura(date.getFullYear().toString());
       setTecnologiaTerminales("INCEL-2025");
       setSoTerminales("WIN 10");
       setNumPuntoVenta(2);
@@ -118,7 +114,6 @@ export default function FarmaciaModal({
           cedulaTecnico,
           tipoFarmacia,
           marca,
-          anoApertura,
           tecnologiaTerminales,
           soTerminales,
           numPuntosVenta,
@@ -176,7 +171,10 @@ export default function FarmaciaModal({
               />
               <input
                 className="text-black border rounded p-2"
-                value={tecnicos.find(t => t.cedula === cedulaTecnico)?.nombreCompleto ?? "Sin Tecnico Asignado"}
+                value={
+                  tecnicos.find((t) => t.cedula === cedulaTecnico)
+                    ?.nombreCompleto ?? "Sin Tecnico Asignado"
+                }
                 readOnly
                 disabled
               />
@@ -195,33 +193,33 @@ export default function FarmaciaModal({
                 readOnly
                 disabled
               />
-              <input
+              {/* <input
                 className="text-black border rounded p-2"
                 placeholder="Año"
                 value={anoApertura}
                 onChange={(e) => setAnoApertura(e.target.value)}
-              />
-              <select 
+              /> */}
+              <select
                 className="text-black border rounded p-2"
                 value={tecnologiaTerminales}
-                onChange={(e) => setTecnologiaTerminales(e.target.value)}>
-                  {listaTecnoTerminales.map((item, index)=> (
-                    <option value={item} key={index}>{item}</option>
-                  ))}
+                onChange={(e) => setTecnologiaTerminales(e.target.value)}
+              >
+                {listaTecnoTerminales.map((item, index) => (
+                  <option value={item} key={index}>
+                    {item}
+                  </option>
+                ))}
               </select>
-              {/* <input
+              <select
                 className="text-black border rounded p-2"
-                placeholder="SO Terminales"
                 value={soTerminales}
                 onChange={(e) => setSoTerminales(e.target.value)}
-              /> */}
-              <select 
-                className="text-black border rounded p-2"
-                value={soTerminales}
-                onChange={(e) => setSoTerminales(e.target.value)}>
-                  {listaSoTerminales.map((item, index)=> (
-                    <option value={item} key={index}>{item}</option>
-                  ))}
+              >
+                {listaSoTerminales.map((item, index) => (
+                  <option value={item} key={index}>
+                    {item}
+                  </option>
+                ))}
               </select>
               <input
                 className="text-black border rounded p-2"
@@ -231,14 +229,15 @@ export default function FarmaciaModal({
                   setNumPuntoVenta(parseInt(e.target.value) || 0)
                 }
               />
-              <select 
+              <select
                 className="text-black border rounded p-2"
                 value={tipoRack}
-                onChange={(e) => setTipoRack(e.target.value)}>
-                  <option value="SIN RACK">SIN RACK</option>
-                  <option value="2 NIVELES">2 NIVELES</option>
-                  <option value="3 NIVELES">3 NIVELES</option>
-                  <option value="GABINETE">GABINETE</option>
+                onChange={(e) => setTipoRack(e.target.value)}
+              >
+                <option value="SIN RACK">SIN RACK</option>
+                <option value="2 NIVELES">2 NIVELES</option>
+                <option value="3 NIVELES">3 NIVELES</option>
+                <option value="GABINETE">GABINETE</option>
               </select>
               {farmacia && (
                 <select
