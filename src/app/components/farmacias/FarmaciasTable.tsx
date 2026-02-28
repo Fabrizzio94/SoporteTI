@@ -47,7 +47,10 @@ export default function FarmaciasTable({
           </thead>
           <tbody>
             {farmacias.map((t) => (
-              <tr key={t.oficina} className="border-t">
+              <tr
+                key={t.oficina}
+                className="border-b border-slate-100 hover:bg-slate-50 transition-colors last:border-0"
+              >
                 <td className="p-2">{t.oficina}</td>
                 <td className="p-2 w-fit">{t.nombre}</td>
                 <td className="p-2 w-fit">{t.nombre_tecnico}</td>

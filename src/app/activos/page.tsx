@@ -118,13 +118,6 @@ export default function ActivosPage() {
   useEffect(() => {
     setPaginaActual(1);
   }, [search, filtroFarmacia, filtroTecnico]);
-
-  // Conteo por tipo para ccards
-  /* const conteoPorTipo = TIPO_CHIPS.map((t) => ({
-    ...t,
-    count: activos.filter((a) => a.nombre_activo === t.nombre).length,
-  })); */
-
   // Técnicos únicos para filtro coordinador
   const tecnicosUnicos = [
     ...new Set(activos.map((a) => a.nombre_tecnico).filter(Boolean)),
@@ -160,25 +153,54 @@ export default function ActivosPage() {
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Validar extensión en frontend, revisa que el usuario suba .xlsx y no otro formato.
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      toast.error("Solo se aceptan archivos Excel (.xlsx, .xls)");
+      e.target.value = "";
+      return;
+    }
     const formData = new FormData();
     formData.append("file", file);
-    const promise = fetch("/api/activos/import", {
-      method: "POST",
-      body: formData,
-    }).then(async (r) => {
-      if (!r.ok) throw new Error();
-      return r.json();
-    });
-    await toast.promise(promise, {
-      loading: "Importando Excel...",
-      success: (d) =>
-        `Importación completa: ${d.insertados} insertados, ${d.actualizados} actualizados`,
-      error: "Error al importar",
-    });
-    refreshData();
-    setShowUpload(false);
+    try {
+      const toastId = toast.loading("Importando Excel...");
+      const r = await fetch("/api/activos/import", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        toast.error(data.error || "Error al importar", { id: toastId });
+      } else {
+        toast.success(
+          `${data.insertados} insertados, ${data.actualizados} actualizados`,
+          { id: toastId },
+        );
+        refreshData();
+        setShowUpload(false);
+      }
+      /* const promise = fetch("/api/activos/import", {
+        method: "POST",
+        body: formData,
+      }).then(async (r) => {
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || "Error al importar"); // control de error por consola
+        return data;
+      });
+      await toast.promise(promise, {
+        loading: "Importando Excel...",
+        success: (d) =>
+          `Importación completa: ${d.insertados} insertados, ${d.actualizados} actualizados`,
+        error: (err) => err.message, // mensaje por consola del error de backend
+      });
+      e.target.value = "";
+      refreshData();
+      setShowUpload(false); */
+    } catch {
+      toast.error("Error inesperado al procesar el archivo");
+    } finally {
+      e.target.value = "";
+    }
   };
-
   return (
     <main className="p-6">
       <h1 className="text-2xl font-semibold text-slate-800 mb-1">Activos</h1>
@@ -282,17 +304,15 @@ export default function ActivosPage() {
         <div className="border-2 border-dashed border-indigo-200 rounded-lg p-6 text-center bg-indigo-50 mb-4">
           <Upload className="w-8 h-8 text-indigo-400 mx-auto mb-2" />
           <p className="text-sm font-medium text-indigo-700">
-            Subir Excel aqui, tomar en cuenta la siguiente estructura:
+            Subir Excel aqui, columnas requeridas:
           </p>
           <div className="flex flex-wrap gap-2 justify-center my-3">
             {[
-              "Activo Fijo",
               "Nombre Activo",
+              "Activo Fijo",
               "Centro Costo Origen",
               "Fecha de Alta",
               "Detalle",
-              "Marca",
-              "Modelo",
             ].map((c) => (
               <span
                 key={c}

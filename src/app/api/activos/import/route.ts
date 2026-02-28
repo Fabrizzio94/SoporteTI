@@ -41,6 +41,10 @@ export async function POST(req: Request) {
     if (!file) {
       return NextResponse.json({ error: "No se recibió archivo" }, { status: 400 });
     }
+    // Validar extensión
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      return NextResponse.json({ error: "Solo se aceptan archivos Excel (.xlsx, .xls)" }, { status: 400 });
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const workbook = XLSX.read(buffer, { type: "buffer", cellDates: true });
@@ -52,6 +56,16 @@ export async function POST(req: Request) {
 
     if (rows.length === 0) {
       return NextResponse.json({ error: "El archivo está vacío" }, { status: 400 });
+    }
+    // validación de columnas requeridas
+    const columnasRequeridas = ["Nombre Activo", "Activo fijo", "Centro Costo Origen", "Fecha de Alta", "Detalle"];
+    const primeraFila = rows[0];
+    const faltantes = columnasRequeridas.filter((c) => !(c in primeraFila));
+    if (faltantes.length > 0) {
+      return NextResponse.json(
+        { error: `Archivo incorrecto. Columnas faltantes: ${faltantes.join(", ")}` },
+        { status: 400 }
+      );
     }
 
     const pool = await getConnection();
@@ -155,6 +169,7 @@ export async function POST(req: Request) {
       if (esServidor) {
         await pool.request()
           .input("codigo_activo", codigoActivo)
+          .input("oficina", farmacia.oficina)
           .query(`
             MERGE INTO servidor AS D
             USING (SELECT @codigo_activo AS codigo_activo) AS O
