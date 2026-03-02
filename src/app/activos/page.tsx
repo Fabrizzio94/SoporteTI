@@ -224,10 +224,10 @@ export default function ActivosPage() {
       {/* TOOLBAR */}
       <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm mb-4">
         <div className="flex items-center gap-3 flex-wrap">
-          <ActivosSearch onSearch={setSearch} />
+          <ActivosSearch onSearch={setSearch} className="w-32 lg:w-48"/>
           <div className="w-px h-6 bg-slate-200" />
           <select
-            className="text-sm border border-slate-200 rounded-md px-2 py-1.5 text-slate-600 outline-none"
+            className="text-sm border border-slate-200 rounded-md px-2 py-1.5 text-slate-600 outline-none w-32 lg:w-48"
             value={filtroFarmacia}
             onChange={(e) => setFiltroFarmacia(e.target.value)}
           >
@@ -242,7 +242,7 @@ export default function ActivosPage() {
           </select>
           {user?.role === "COORDINADOR" && (
             <select
-              className="text-sm border border-slate-200 rounded-md px-2 py-1.5 text-slate-600 outline-none"
+              className="text-sm border border-slate-200 rounded-md px-2 py-1.5 text-slate-600 outline-none w-32 lg:w-48"
               value={filtroTecnico}
               onChange={(e) => setFiltroTecnico(e.target.value)}
             >
@@ -255,7 +255,7 @@ export default function ActivosPage() {
             </select>
           )}
           <select
-            className="text-sm border border-slate-200 rounded-md px-2 py-1.5 text-slate-600 outline-none"
+            className="text-sm border border-slate-200 rounded-md px-2 py-1.5 text-slate-600 outline-none w-32 lg:w-48"
             value={filtroMarca}
             onChange={(e) => setFiltroMarca(e.target.value)}
           >
@@ -275,14 +275,15 @@ export default function ActivosPage() {
               ))}
           </select>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           {user?.role === "COORDINADOR" && (
             <>
               <button
                 onClick={() => setShowUpload(!showUpload)}
                 className="flex items-center gap-2 text-sm border border-slate-200 bg-white text-slate-600 px-3 py-1.5 rounded-md hover:bg-slate-50 transition"
               >
-                <Upload className="w-4 h-4" /> Importar Excel
+                <Upload className="w-4 h-4" /> 
+                <span className="hidden lg:inline">Importar Excel</span>
               </button>
               <div className="w-px h-6 bg-slate-200" />
             </>
@@ -294,7 +295,8 @@ export default function ActivosPage() {
             }}
             className="flex items-center gap-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md transition"
           >
-            <Plus className="w-4 h-4" /> Nuevo Activo
+            <Plus className="w-4 h-4" />
+            <span className="hidden lg:inline">Nuevo Activo</span>
           </button>
         </div>
       </div>

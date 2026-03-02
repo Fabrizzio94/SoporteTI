@@ -55,67 +55,23 @@ export async function GET() {
     );
   }
 }
-// POST
-export async function POST(req: Request) {
-  try {
-    //const body = await req.json();
-    const { oficina, nombre, cedulaTecnico, tipoFarmacia, marca,
-      tecnologiaTerminales, soTerminales, numPuntosVenta, tipoRack } = await req.json();
-    const pool = await getConnection();
-    const request = await pool.request();
-    await request
-      .input("oficina", oficina)
-      .input("nombre", nombre)
-      .input("cedula_tecnico", cedulaTecnico)
-      .input("tipo_farmacia", tipoFarmacia)
-      .input("marca", marca)
-      .input("tecnologia_terminales", tecnologiaTerminales)
-      .input("ssoo_terminales", soTerminales)
-      .input("num_puntos_venta", numPuntosVenta)
-      .input("tipo_rack", tipoRack)
-      .input("estado", "A")
-      .query(`
-      INSERT INTO farmacia (oficina, nombre, cedula_tecnico, tipo_farmacia, marca, tecnologia_terminales,
-      ssoo_terminales, num_puntos_venta, tipo_rack, estado)
-      VALUES (@oficina, @nombre,@cedula_tecnico,@tipo_farmacia,@marca,@tecnologia_terminales,
-      @ssoo_terminales, @num_puntos_venta,@tipo_rack,'A')
-      `);
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Error al insertar registro" },
-      { status: 500 }
-    );
-  }
 
-}
 // put
-
 export async function PUT(req: Request) {
   try {
-    const { oficina, nombre, cedulaTecnico, tipoFarmacia, marca,
-      tecnologiaTerminales, soTerminales, numPuntosVenta, tipoRack, estado } = await req.json();
+    const { oficina, tecnologiaTerminales, soTerminales, numPuntosVenta, tipoRack, estado } = await req.json();
     const pool = await getConnection();
     const request = await pool.request();
     await request
       .input("oficina", oficina)
-      .input("nombre", nombre)
-      .input("cedula_tecnico", cedulaTecnico)
-      .input("tipo_farmacia", tipoFarmacia)
-      .input("marca", marca)
-      .input("tecnologia_terminales", tecnologiaTerminales)
-      .input("ssoo_terminales", soTerminales)
-      .input("num_puntos_venta", numPuntosVenta)
-      .input("tipo_rack", tipoRack)
+      .input("tecnologia_terminales", tecnologiaTerminales ?? null)
+      .input("ssoo_terminales", soTerminales ?? null)
+      .input("num_puntos_venta", numPuntosVenta ?? null)
+      .input("tipo_rack", tipoRack ?? null)
       .input("estado", estado)
       .query(`
       UPDATE farmacia
       SET
-        oficina = @oficina,
-        nombre = @nombre,
-        cedula_tecnico = @cedula_tecnico,
-        tipo_farmacia = @tipo_farmacia,
-        marca = @marca,
         tecnologia_terminales = @tecnologia_terminales,
         ssoo_terminales = @ssoo_terminales,
         num_puntos_venta = @num_puntos_venta,

@@ -77,10 +77,11 @@ export async function POST() {
                     nombre = @nombre,
                     cedula_tecnico = @cedula_tecnico,
                     tipo_farmacia = @tipo,
-                    estado = 'A'
+                    estado = 'A',
+                    fecha_sync = GETDATE()
                 WHEN NOT MATCHED THEN
-                    INSERT (oficina, nombre, cedula_tecnico, tipo_farmacia, marca, estado)
-                    VALUES (@oficina, @nombre, @cedula_tecnico, @tipo, @marca, 'A');
+                    INSERT (oficina, nombre, cedula_tecnico, tipo_farmacia, marca, estado,fecha_sync)
+                    VALUES (@oficina, @nombre, @cedula_tecnico, @tipo, @marca, 'A', GETDATE());
                 `);
         }
         // INACTIVAR: Las que ya no vinieron en la consulta de Matriz
