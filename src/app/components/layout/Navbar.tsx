@@ -57,6 +57,9 @@ export default function Navbar() {
           <Link href="/activos" className="hover:text-indigo-300">
             Activos
           </Link>
+          <Link href="/actividades" className="hover:text-indigo-300">
+            Actividades
+          </Link>
         </nav>
       </div>
 

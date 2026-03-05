@@ -200,12 +200,89 @@ export async function POST(req: Request) {
           `);
       }
     }
-
+    // obtener todos los codigos en bd activos que no aparecen en archivo importado
+    const codigosEnExcel = new Set(
+      rows
+      .map((row) => row ["Activo fijo"]?.toString().trim())
+      .filter(Boolean)
+    );
+    // codigo activos en tabla activos de farmacias 
+    const activosActivosResult = await pool.request().query(`
+        SELECT a.codigo_activo, a.nombre_activo, a.oficina,
+                a. cedula_tecnico, a.ano_compra,
+                f.tipo_farmacia,
+                t.apellidos + ' ' + t.nombres AS nombre_tecnico
+        FROM activo a
+        INNER JOIN farmacia f ON f.oficina = a.oficina
+        LEFT JOIN tecnicos t ON t.cedula = a.cedula_tecnico
+        WHERE a.estado = 'A'
+        
+      `);
+    for (const activo of activosActivosResult.recordset) {
+      // si activo sigue en excel se ignora
+      if(codigosEnExcel.has(activo.codigo_activo)) continue;
+      // no esta en excel - se inactiva automaticamente
+      await pool.request()
+        .input("codigo_activo", activo.codigo_activo)
+        .query(`UPDATE activo SET estado = 'I' WHERE codigo_activo = @codigo_activo`);
+      const esFranquicia = activo.tipo_farmacia === "Franquicia";
+      // verifica si tiene baja manual - si existe se actualiza a estado: Verificado
+      const manualPendiente = await pool.request()
+        .input("codigo_activo", activo.codigo_activo)
+        .query(`
+          SELECT id FROM historico_activo
+          WHERE codigo_activo = @codigo_activo
+            AND tipo_baja = 'MANUAL'
+            AND verificado = 0
+          `);
+        if(manualPendiente.recordset.length > 0) {
+          // ya tiene baja manual - marcar como verificado
+          await pool.request()
+            .input("codigo_activo", activo.codigo_activo)
+            .query(`
+              UPDATE historico_activo SET
+                verificado = 1,
+                fecha_verificacion = GETDATE()
+              WHERE codigo_activo = @codigo_activo
+                AND tipo_baja = 'MANUAL'
+                AND verificado = 0
+              `);
+        } else {
+          // sin baja manual - registrar baja automatica
+          await pool.request()
+            .input("codigo_activo", activo.codigo_activo)
+            .input("nombre_activo", activo.nombre_activo)
+            .input("oficina", activo.oficina)
+            .input("cedula_tecnico", activo.cedula_tecnico ?? null)
+            .input("nombre_tecnico", activo.nombre_tecnico ?? "Sin tecnico")
+            .input("ano_compra", activo.ano_compra ?? null)
+            .input("usuario_baja", "Automatico")
+            .input("tipo_baja", "Automatico")
+            // equipos de franquicia se verifican de inmediato, y si es Propia compara con el excel
+            .input("verificado", 1)
+            .input("fecha_verificacion", new Date())
+            .query(`
+              INSERT INTO historico_activo (
+                codigo_activo, nombre_activo, oficina, cedula_tecnico,
+                nombre_tecnico, ano_compra, motivo_baja, usuario_baja,
+                tipo_baja, verificado, fecha_verificacion
+                ) VALUES (
+                  @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
+                  @nombre_tecnico, @ano_compra, 'No encontrado en carga Excel', 
+                  @usuario_baja, @tipo_baja, @verificado, @fecha_verificacion 
+                )
+              `);
+        }
+        resumen.insertados;
+    }
     return NextResponse.json({
       ok: true,
       insertados: resumen.insertados,
       actualizados: resumen.actualizados,
       franquicia_omitidos: resumen.franquicia_omitidos,
+      bajas_automaticas: activosActivosResult.recordset.filter(
+        (a) => !codigosEnExcel.has(a.codigo_activo)
+      ).length,
       sin_farmacia: resumen.sin_farmacia,
       message: `${resumen.insertados} insertados, ${resumen.actualizados} actualizados`,
     });
