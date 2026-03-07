@@ -5,7 +5,7 @@ import { Farmacia } from "@/app/types/farmacia";
 import { useState, useEffect, useRef } from "react";
 import FarmaciasTable from "../components/farmacias/FarmaciasTable";
 import { useSession } from "next-auth/react";
-import { RefreshCcw } from "lucide-react";  // para iconos svg refresh
+import { RefreshCcw } from "lucide-react"; // para iconos svg refresh
 import toast from "react-hot-toast";
 export default function FarmaciasPage() {
   const [search, setSearch] = useState("");
@@ -17,8 +17,8 @@ export default function FarmaciasPage() {
   // Ref para detectar clic afuera del dropdown
   const dropdownRef = useRef<HTMLDivElement>(null);
   // paginacion
+  const [registroPorPagina, setRegistroPorPagina] = useState(10);
   const [paginaActual, setPaginaActual] = useState(1);
-  const registroPorPagina = 20;
   // manejo de sesion login para filtrar por usuario que ingrese
   const { data: session } = useSession();
   const [isSyn, setIsSyn] = useState(false);
@@ -32,20 +32,22 @@ export default function FarmaciasPage() {
   };
   const handleSincronizar = async () => {
     setIsSyn(true);
-    const promise = fetch("/api/farmacias/sync",{ method: "POST"})
-    .then(async (res) => {
-      console.log(res);
-      if(!res.ok) throw new Error("Error en la red");
-      return res.json();
-    });
+    const promise = fetch("/api/farmacias/sync", { method: "POST" }).then(
+      async (res) => {
+        console.log(res);
+        if (!res.ok) throw new Error("Error en la red");
+        return res.json();
+      },
+    );
     await toast.promise(promise, {
       loading: "Sincronizando con Matriz...",
-      success: (data) => `Sincronizacion completa, se procesaron ${data.count} farmacias.`,
-      error: "Error al sincronizar, verifica conexion al dominio."
+      success: (data) =>
+        `Sincronizacion completa, se procesaron ${data.count} farmacias.`,
+      error: "Error al sincronizar, verifica conexion al dominio.",
     });
     setIsSyn(false);
     refreshData();
-  }
+  };
   useEffect(() => {
     fetch("/api/farmacias")
       .then((res) => res.json())
@@ -65,7 +67,10 @@ export default function FarmaciasPage() {
   // useEffect para clic fuera del dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if(dropdownRef.current && !dropdownRef.current.contains(e.target as Node)){
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setMostrarConteo(false);
       }
     };
@@ -76,17 +81,27 @@ export default function FarmaciasPage() {
     const cumpleBusqueda =
       t.nombre?.toLowerCase().includes(search.toLowerCase()) ||
       t.oficina.includes(search) ||
+      t.nombre_tecnico?.toLowerCase().includes(search.toLowerCase()) ||
       t.marca.toLowerCase().includes(search.toLowerCase());
     const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
     return cumpleBusqueda && cumpleEstado;
   });
   // CONTEO DE FARMACIAS EN ETIQUETA PARA INFORMACION
   const conteoTotal = filtered.length;
-  const conteoPorTecnico = filtered.reduce((acc, f) => {
-    const tecnico = f.nombreTecnico || "Sin asignar";
-    acc[tecnico]= (acc[tecnico] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>)
+  const conteoPorTecnico = filtered.reduce(
+    (acc, f) => {
+      const tecnico = f.nombre_tecnico || "Sin asignar";
+      acc[tecnico] = (acc[tecnico] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+  const conteoPropia = filtered.filter(
+    (f) => f.tipo_farmacia === "Propia",
+  ).length;
+  const conteoFranquicia = filtered.filter(
+    (f) => f.tipo_farmacia === "Franquicia",
+  ).length;
   // PAGINACION TECNICOS
   const ultimoIndice = paginaActual * registroPorPagina;
   const primerIndice = ultimoIndice - registroPorPagina;
@@ -96,20 +111,25 @@ export default function FarmaciasPage() {
   return (
     <main className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Farmacias</h1>
-      <div className="flex items-center justify-between gap-3 bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm mb-4 flex-wrap">
-        <div className="flex justify-between items-cente mb-1">
-          <FarmaciasSearch onSearch={setSearch} />
-        </div>
-        {/*<div className="w-px h-6 bg-slate-200" />  separador */}
-
-        {/* Contador — antes de FarmaciasTable */}
-        <div className="flex flex-wrap items-center gap-3">
-          {user?.role === "COORDINADOR" && (
-            <span className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-medium">
-              Total: <b>{conteoTotal}</b> farmacia{conteoTotal !== 1 ? "s" : ""}
+      <div className="justify-between bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm mb-4 flex items-center gap-2 flex-wrap">
+          <FarmaciasSearch onSearch={setSearch} className="wd-32 md:w-48"/>
+          {/* Contador — antes de FarmaciasTable */}
+          <div className="flex flex-wrap items-center gap-3">
+            {user?.role === "COORDINADOR" && (
+              <span className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-medium">
+                Total: <b>{conteoTotal}</b> farmacia
+                {conteoTotal !== 1 ? "s" : ""}
+              </span>
+            )}
+            <div className="w-px h-6 bg-slate-200" />
+            <span className="text-sm bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full font-medium">
+              Propias: <b>{conteoPropia}</b>
             </span>
-          )}
-          <div className="w-px h-6 bg-slate-200" /> {/* separador */}
+            <span className="text-sm bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-medium">
+              Franquicias: <b>{conteoFranquicia}</b>
+            </span>
+            <div className="w-px h-6 bg-slate-200" /> {/* separador */}
+          </div>
           {user?.role === "COORDINADOR" && (
             <div className="relative" ref={dropdownRef}>
               <button
@@ -129,7 +149,9 @@ export default function FarmaciasPage() {
                         key={tecnico}
                         className="flex justify-between text-sm px-2 py-1 hover:bg-lime-300 rounded"
                       >
-                        <span className="text-slate-700 group-hover:text-indigo-700 group-hover:font-medium transition-colors">{tecnico}</span>
+                        <span className="text-slate-700 group-hover:text-indigo-700 group-hover:font-medium transition-colors">
+                          {tecnico}
+                        </span>
                         <span className="font-bold text-indigo-600 bg-indigo-50 group-hover:bg-indigo-200 group-hover:text-indigo-800 px-2 py-0.5 rounded-full ml-4 transition-colors">
                           {count}
                         </span>
@@ -145,10 +167,11 @@ export default function FarmaciasPage() {
               Tus farmacias: <b>{conteoTotal}</b>
             </span>
           )}
-        </div>
-        <div className="flex items-center gap-14">
-          <label className="flex items-center cursor-pointer gap-2 bg-gray-100 p-2 rounded-md">
-            <span className="text-sm font-medium text-gray-700">
+          <div>
+
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+          <label className="flex items-center cursor-pointer gap-2 bg-gray-100 p-2 rounded-md shrink-0">
+            <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
               Ver Inactivos
             </span>
             <input
@@ -163,15 +186,18 @@ export default function FarmaciasPage() {
           {user?.role === "COORDINADOR" && (
             <button
               onClick={handleSincronizar}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md shadow transition-all"
+              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md shadow transition-all shrink-0"
             >
               <RefreshCcw
                 className={`w-4 h-4 ${isSyn ? "animate-spin" : ""}`}
               />
-              {isSyn ? "Sincronizando..." : "Sincronizar Matriz"}
+              <span className="hidden lg:inline whitespace-nowrap">
+                {isSyn ? "Sincronizando..." : "Sincronizar Matriz"}
+              </span>
             </button>
           )}
-        </div>
+</div>
+      </div>
       </div>
       <FarmaciaModal
         open={!!farmaciasSeleccionada}
@@ -186,12 +212,25 @@ export default function FarmaciasPage() {
           refreshData();
         }}
       />
-      <FarmaciasTable
-        farmacias={farmaciasPaginadas}
-        onEdit={(t) => setFarmaciaSeleccionada(t)}
-      />
+          <FarmaciasTable
+            farmacias={farmaciasPaginadas}
+            onEdit={(t) => setFarmaciaSeleccionada(t)}
+          />
+     
       {/* paginacion de farmacias */}
-      <div className="mt-8 flex flex-col items-center gap-4">
+      <div className="mt-6 flex items-center justify-between">
+        <select
+          className="text-sm border border-slate-200 rounded-md px-2 py-1 text-slate-600"
+          value={registroPorPagina}
+          onChange={(e) => {
+            setRegistroPorPagina(Number(e.target.value));
+            setPaginaActual(1);
+          }}
+        >
+          <option value={10}>10 por página</option>
+          <option value={25}>25 por página</option>
+          <option value={50}>50 por página</option>
+        </select>
         {/* Contenedor de botones centrado */}
         <div className="flex items-center space-x-1">
           {/* Botón Anterior */}

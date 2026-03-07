@@ -39,14 +39,14 @@ export async function POST() {
         for (const f of listaMatriz) {
             // TECNICOS
             if (f.CEDULA_TECNICO && !tecnicosProcesados.has(f.CEDULA_TECNICO)) {
-              tecnicosProcesados.add(f.CEDULA_TECNICO);
+                tecnicosProcesados.add(f.CEDULA_TECNICO);
 
-              await poolLocal
-                .request()
-                .input("cedula", f.CEDULA_TECNICO)
-                .input("nombres", f.NOMBRES)
-                .input("apellidos", f.APELLIDOS)
-                .input("usuario", f.USUARIO ?? null).query(`
+                await poolLocal
+                    .request()
+                    .input("cedula", f.CEDULA_TECNICO)
+                    .input("nombres", f.NOMBRES)
+                    .input("apellidos", f.APELLIDOS)
+                    .input("usuario", f.USUARIO ?? null).query(`
                     IF NOT EXISTS (SELECT 1 FROM tecnicos WHERE cedula = @cedula)
                     BEGIN
                         INSERT INTO tecnicos (cedula, nombres, apellidos, estado, rol, usuario)
@@ -67,7 +67,7 @@ export async function POST() {
                 .input("cedula_tecnico", f.CEDULA_TECNICO)
                 .input("tipo", f.FRANQUICIA === 'S' ? 'Franquicia' : 'Propia')
                 // Asignamos una marca por defecto basada en el tipo si no existe
-                .input("marca", f.SUCURSAL) 
+                .input("marca", f.SUCURSAL)
                 .query(`
                 MERGE INTO farmacia AS Destino
                 USING (SELECT @oficina AS oficina) AS Origen
@@ -77,16 +77,17 @@ export async function POST() {
                     nombre = @nombre,
                     cedula_tecnico = @cedula_tecnico,
                     tipo_farmacia = @tipo,
-                    estado = 'A'
+                    estado = 'A',
+                    fecha_sync = GETDATE()
                 WHEN NOT MATCHED THEN
-                    INSERT (oficina, nombre, cedula_tecnico, tipo_farmacia, marca, estado, ano_apertura)
-                    VALUES (@oficina, @nombre, @cedula_tecnico, @tipo, @marca, 'A', YEAR(GETDATE()));
+                    INSERT (oficina, nombre, cedula_tecnico, tipo_farmacia, marca, estado,fecha_sync)
+                    VALUES (@oficina, @nombre, @cedula_tecnico, @tipo, @marca, 'A', GETDATE());
                 `);
         }
         // INACTIVAR: Las que ya no vinieron en la consulta de Matriz
         const oficinasVivas = listaMatriz.map(f => `'${f.OFICINA}'`).join(",");
         if (oficinasVivas.length > 0) {
-        await poolLocal.request().query(`
+            await poolLocal.request().query(`
             UPDATE farmacia 
             SET estado = 'I' 
             WHERE oficina NOT IN (${oficinasVivas})

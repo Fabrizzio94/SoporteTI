@@ -1,7 +1,7 @@
 "use client";
 
 import { Tecnico } from "@/app/types/tecnico";
-import { CircleCheck, CircleX, UserRoundPen } from 'lucide-react';
+import { CircleCheck, CircleX, UserRoundPen } from "lucide-react";
 type PropsTecnicosTabla = {
   tecnicos: Tecnico[];
   onEdit: (tecnico: Tecnico) => void;
@@ -13,32 +13,46 @@ export default function TecnicosTable({
 }: PropsTecnicosTabla) {
   return (
     <>
-      <div className="border rounded">
-        <table className="w-full text-sm table-auto">
-          <thead className="bg-gray-100">
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+        <table className="w-full text-sm table-auto border-collapse">
+          <thead className="bg-gray-100 border-b-2 border-slate-200">
             <tr>
-              <th className="pl-20 text-black text-left">Cedúla</th>
-              <th className="p-2 text-black py-2 text-left whitespace-nowrap">Técnico</th>
-              <th className="p-2 text-black text-left">Usuario</th>
-              <th className="p-2 text-black text-left">Contraseña</th>
-              <th className="p-2 text-black text-left">Rol</th>
-              <th className="p-2 text-black text-left">Estado</th>
-              <th className="p-2 text-black text-left"></th>
+              {[
+                "CEDULA",
+                "TECNICO",
+                "USUARIO",
+                "CONTRASEÑA",
+                "ROL",
+                "ESTADO",
+                "",
+              ].map((h) => (
+                <th
+                  key={h}
+                  className="bg-slate-50 text-black-500 text-xs uppercase tracking-wide px-4 py-3 text-left border-b border-slate-100 font-semibold whitespace-nowrap"
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {tecnicos.map((t) => (
-              <tr key={t.cedula} className="border-t">
-                <td className="pl-20">{t.cedula}</td>
-                <td className="p-2 font-medium">
+              <tr
+                key={t.cedula}
+                className="hover:bg-slate-50 transition-colors"
+              >
+                <td className="pl-10">{t.cedula}</td>
+                <td className="px-4 py-3 text-sm text-slate-700 font-bold">
                   {t.nombreCompleto}
                 </td>
-                <td className="p-2 text-gray-500">{t.usuario}</td>
-                <td className="p-2 text-center">
+                <td className="px-4 py-3 text-sm text-slate-700">
+                  {t.usuario}
+                </td>
+                <td className="p-2 ">
                   {t.password ? (
-                    <CircleCheck className="mx-auto" color="#15cb4c"/>
+                    <CircleCheck className="mx-auto" color="#15cb4c" />
                   ) : (
-                    <CircleX className="mx-auto" color="#cc0000"/>
+                    <CircleX className="mx-auto" color="#cc0000" />
                   )}
                 </td>
                 <td className="p-2">{t.rol}</td>
@@ -60,9 +74,7 @@ export default function TecnicosTable({
                     onClick={() => onEdit(t)}
                   >
                     <span className="text-blue-600 hover:underline">
-                      <UserRoundPen
-                        className="w-5 h5 hover:text-blue-600"
-                      />
+                      <UserRoundPen className="w-5 h5 hover:text-blue-600" />
                     </span>
                   </button>
                 </td>

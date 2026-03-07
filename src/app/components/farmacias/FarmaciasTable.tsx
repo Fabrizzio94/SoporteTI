@@ -11,67 +11,103 @@ export default function FarmaciasTable({
   farmacias,
   onEdit,
 }: PropsFarmaciasTabla) {
+  const columnas = [
+    {
+      label: "Oficina",
+      sticky: "sticky left-0 z-20 bg-gray-100 2xl:static",
+    },
+    {
+      label: "Nombre",
+      sticky: "sticky left-[72px] z-20 bg-gray-100 2xl:static",
+    },
+    { label: "Tecnico", sticky: "bg-gray-100" },
+    { label: "Tipo", sticky: "bg-gray-100" },
+    { label: "Marca", sticky: "bg-gray-100" },
+    { label: "Codigo Activo", sticky: "bg-gray-100" },
+    { label: "Año de Compra", sticky: "bg-gray-100" },
+    { label: "SSOO Servidor", sticky: "bg-gray-100" },
+    { label: "Tipo RAM", sticky: "bg-gray-100" },
+    { label: "RAM (GB)", sticky: "bg-gray-100" },
+    { label: "Tecn. terminales", sticky: "bg-gray-100" },
+    { label: "SO terminales", sticky: "bg-gray-100" },
+    { label: "Virtualizador", sticky: "bg-gray-100" },
+    { label: "#PDV", sticky: "bg-gray-100" },
+    { label: "Tipo Rack", sticky: "bg-gray-100" },
+    { label: "Estado", sticky: "" },
+    { label: "", sticky: "" },
+  ];
+  // constantes para inyectar en tailwind para inmovilizar columnas oficina y nombre
+  const td = "px-4 py-3 text-sm text-slate-700 border-b border-slate-100";
+  const s1 = `${td} sticky left-0 z-10 bg-white 2xl:static`;
+  const s2 = `${td} sticky left-[72px]  z-10 bg-white 2xl:static`;
   return (
     <>
-      <div className="border rounded">
-        <table className="w-full table-auto text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-2 text-black text-left">Oficina</th>
-              <th className="p-2 text-black text-left">Nombre</th>
-              <th className="p-2 text-black text-left">Tecnico</th>
-              <th className="p-2 text-black text-left">Tipo</th>
-              <th className="p-2 text-black text-left">Marca</th>
-              <th className="p-2 text-black text-left">Año</th>
-              <th className="p-2 text-black text-left">Tecn. Terminales</th>
-              <th className="p-2 text-black text-left">SO Terminales</th>
-              <th className="p-2 text-black text-left"># PDV </th>
-              <th className="p-2 text-black text-left">Tipo Rack</th>
-              <th className="p-2 text-black text-left">Estado</th>
-              <th className="p-2 text-black text-left"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {farmacias.map((t) => (
-              <tr key={t.oficina} className="border-t">
-                <td className="p-2">{t.oficina}</td>
-                <td className="p-2 w-fit">{t.nombre}</td>
-                <td className="p-2 w-fit">{t.nombreTecnico}</td>
-                <td className="p-2">{t.tipo_farmacia}</td>
-                <td className="p-2">{t.marca}</td>
-                <td className="p-2">{t.ano_apertura}</td>
-                <td className="p-2">{t.tecnologia_terminales}</td>
-                <td className="p-2">{t.ssoo_terminales}</td>
-                <td className="p-2">{t.num_puntos_venta}</td>
-                <td className="p-2">{t.tipo_rack}</td>
-                <td className="p-2">
-                  <span
-                    className={`${
-                      t.estado === "A"
-                        ? "text-green-600 font-medium"
-                        : "text-red-600 font-medium"
-                    } `}
+      <div className="bg-white border border-slate-200 rounded-lg shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full table-auto text-sm border-collapse min-w-[1200px]">
+            <thead className="border-b-2 border-slate-200">
+              <tr>
+                {columnas.map((col) => (
+                  <th
+                    key={col.label}
+                    className={`bg-slate-50 text-black-500 text-xs uppercase tracking-wide px-4 py-3 text-left border-b border-slate-100 font-semibold whitespace-nowrap ${col.sticky}`}
                   >
-                    {t.estado === "A" ? "Activo" : "Inactivo"}
-                  </span>
-                </td>
-                <td className="px-4 py-2">
-                  <button
-                    className="p-2 hover:bg-gray-100 rounded"
-                    title="Editar"
-                    onClick={() => onEdit(t)}
-                  >
-                    <span className="text-blue-600 hover:underline">
-                      <SquarePen color="#15416f"
-                        className="w-5 h5 hover:text-blue-600"
-                      />
-                    </span>
-                  </button>
-                </td>
+                    {col.label}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {farmacias.map((t) => (
+                <tr
+                  key={t.oficina}
+                  className="border-b border-slate-100 hover:bg-slate-50 transition-colors last:border-0"
+                >
+                  <td className={s1}>{t.oficina}</td>
+                  <td className={s2}>{t.nombre}</td>
+                  <td className="p-2 w-fit">{t.nombre_tecnico}</td>
+                  <td className="p-2">{t.tipo_farmacia}</td>
+                  <td className="p-2">{t.marca}</td>
+                  <td className="p-2 font-bold">{t.codigo_servidor}</td>
+                  <td className="p-2 text-center">{t.ano_servidor}</td>
+                  <td className="p-2 text-center">{t.so_servidor}</td>
+                  <td className="p-2 text-center">{t.tipo_ram}</td>
+                  <td className="p-2 text-center">{t.ram}</td>
+                  <td className="p-2 text-center">{t.tecnologia_terminales}</td>
+                  <td className="p-2 text-center">{t.ssoo_terminales}</td>
+                  <td className="p-2 text-center">{t.virtualizer}</td>
+                  <td className="p-2 text-center">{t.num_puntos_venta}</td>
+                  <td className="p-2 text-center">{t.tipo_rack}</td>
+                  <td className="p-2 text-center">
+                    <span
+                      className={`${
+                        t.estado === "A"
+                          ? "text-green-600 font-medium"
+                          : "text-red-600 font-medium"
+                      } `}
+                    >
+                      {t.estado === "A" ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2">
+                    <button
+                      className="p-2 hover:bg-gray-100 rounded"
+                      title="Editar"
+                      onClick={() => onEdit(t)}
+                    >
+                      <span className="text-blue-600 hover:underline">
+                        <SquarePen
+                          color="#15416f"
+                          className="w-5 h5 hover:text-blue-600"
+                        />
+                      </span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </>
   );
