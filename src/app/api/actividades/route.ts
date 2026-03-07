@@ -23,29 +23,22 @@ export async function GET(req: Request) {
 
     const pool = await getConnection();
 
-    // Filtro por técnico según rol
     const filtroCedula =
       user.role === "TECNICO"
-        ? `AND h.cedula_tecnico = '${user.cedula}'` // técnico solo ve los suyos
-        : tecnico
-          ? `AND h.cedula_tecnico = '${tecnico}'` // coordinador filtra por técnico elegido
-          : ""; // coordinador sin filtro ve todos
+        ? `AND h.cedula_tecnico = '${user.cedula}'`
+        : tecnico ? `AND h.cedula_tecnico = '${tecnico}'` : "";
 
-    const filtroBusqueda = busqueda
-      ? `AND h.codigo_activo LIKE '%${busqueda}%'`
-      : "";
-
+    const filtroBusqueda = busqueda ? `AND h.codigo_activo LIKE '%${busqueda}%'` : "";
     const filtroFarmacia = farmacia ? `AND h.oficina = '${farmacia}'` : "";
-
-    const filtroEstado =
-      estado === "Verificado"
-        ? `AND h.verificado = 1`
-        : estado === "Pendiente"
-          ? `AND h.verificado = 0 AND h.tipo_baja = 'MANUAL'`
-          : "";
-
     const filtroDesde = desde ? `AND h.fecha_baja >= '${desde}'` : "";
     const filtroHasta = hasta ? `AND h.fecha_baja <= '${hasta} 23:59:59'` : "";
+
+    const filtroEstado =
+      estado === "Verificado" ? `AND h.verificado = 1 AND h.tipo_baja = 'MANUAL'` :
+        estado === "Pendiente" ? `AND h.verificado = 0 AND h.tipo_baja = 'MANUAL'` :
+          estado === "Automatico" ? `AND h.tipo_baja = 'Automatico'` :
+            estado === "Reactivado" ? `AND h.motivo_baja LIKE '%Reactivado%'` :
+              "";
 
     const result = await pool.request().query(`
       SELECT
@@ -64,28 +57,23 @@ export async function GET(req: Request) {
       ORDER BY h.fecha_baja DESC
     `);
 
-    const registros = result.recordset;
-
-    // Separar manuales y automáticos
-    const manuales = registros.filter((r) => r.tipo_baja === "MANUAL");
-    const automaticos = registros.filter((r) => r.tipo_baja === "Automatico");
-
-    // Cards resumen — sin filtros aplicados para mostrar totales reales
+    // Resumen con pendientes incluido
     const resumenResult = await pool.request().query(`
       SELECT
         COUNT(*) AS total,
-        SUM(CASE WHEN tipo_baja = 'MANUAL' THEN 1 ELSE 0 END) AS manuales,
-        SUM(CASE WHEN tipo_baja = 'AUTO'   THEN 1 ELSE 0 END) AS automaticos,
-        SUM(CASE WHEN verificado = 1        THEN 1 ELSE 0 END) AS verificados
+        SUM(CASE WHEN tipo_baja = 'MANUAL'                        THEN 1 ELSE 0 END) AS manuales,
+        SUM(CASE WHEN tipo_baja = 'Automatico'                    THEN 1 ELSE 0 END) AS automaticos,
+        SUM(CASE WHEN verificado = 1                              THEN 1 ELSE 0 END) AS verificados,
+        SUM(CASE WHEN tipo_baja = 'MANUAL' AND verificado = 0     THEN 1 ELSE 0 END) AS pendientes
       FROM historico_activo
       ${user.role === "TECNICO" ? `WHERE cedula_tecnico = '${user.cedula}'` : ""}
     `);
 
     return NextResponse.json({
-      manuales,
-      automaticos,
+      actividades: result.recordset,        // ← lista única
       resumen: resumenResult.recordset[0],
     });
+
   } catch (error) {
     console.error("Error actividades:", error);
     return NextResponse.json({ error: "Error al obtener actividades" }, { status: 500 });
@@ -135,27 +123,26 @@ export async function PUT(req: Request) {
 
       // Insertar nuevo registro en histórico como kardex — reasignación
       await pool.request()
-        .input("codigo_activo",  hist.codigo_activo)
-        .input("nombre_activo",  hist.nombre_activo)
-        .input("oficina",        nueva_oficina ?? hist.oficina)
+        .input("codigo_activo", hist.codigo_activo)
+        .input("nombre_activo", hist.nombre_activo)
+        .input("oficina", nueva_oficina ?? hist.oficina)
         .input("cedula_tecnico", hist.cedula_tecnico ?? null)
         .input("nombre_tecnico", hist.nombre_tecnico ?? null)
-        .input("ano_compra",     hist.ano_compra ?? null)
-        .input("motivo_baja",    nueva_oficina ? "Reasignado a otra farmacia" : "Reactivado")
-        .input("observacion",    observacion ?? null)
-        .input("usuario_baja",   user.name ?? "Desconocido")
-        .input("tipo_baja",      "MANUAL")
-        .input("verificado",     1)
+        .input("ano_compra", hist.ano_compra ?? null)
+        .input("motivo_baja", nueva_oficina ? "Reasignado a otra farmacia" : "Reactivado")
+        .input("observacion", observacion ?? null)
+        .input("tipo_baja", "MANUAL")
+        .input("verificado", 1)
         .input("fecha_verificacion", new Date())
         .query(`
           INSERT INTO historico_activo (
             codigo_activo, nombre_activo, oficina, cedula_tecnico,
             nombre_tecnico, ano_compra, motivo_baja, observacion,
-            usuario_baja, tipo_baja, verificado, fecha_verificacion
+            tipo_baja, verificado, fecha_verificacion
           ) VALUES (
             @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
             @nombre_tecnico, @ano_compra, @motivo_baja, @observacion,
-            @usuario_baja, @tipo_baja, @verificado, @fecha_verificacion
+            @tipo_baja, @verificado, @fecha_verificacion
           )
         `);
 
@@ -164,9 +151,9 @@ export async function PUT(req: Request) {
 
     // Solo editar campos del registro existente
     await pool.request()
-      .input("id",               id)
-      .input("motivo_baja",      motivo_baja      ?? hist.motivo_baja)
-      .input("observacion",      observacion      ?? hist.observacion)
+      .input("id", id)
+      .input("motivo_baja", motivo_baja ?? hist.motivo_baja)
+      .input("observacion", observacion ?? hist.observacion)
       .input("codigo_reemplazo", codigo_reemplazo ?? hist.codigo_reemplazo)
       .query(`
         UPDATE historico_activo SET

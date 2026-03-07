@@ -35,7 +35,9 @@ const NOMBRES_ACTIVO = [
   "MONITOR 15.6 PULGADAS",
   "MONITOR 15 PULGADAS",
 ];
-
+const listadoVirtualizer = ["VMware", "BootManager", "N/A"];
+const listadoSoSrv = ["WS-2022", "WS-2019", "WS-2016"];
+const listadoTipoRam = ["DDR5", "DDR4", "DDR3"];
 export default function ActivoModal({
   open,
   activo,
@@ -109,7 +111,7 @@ export default function ActivoModal({
           oficina,
           ...(isServidor && {
             virtualizer,
-            ram: ram ? parseInt(ram) : null,
+            ram: ram !== "" ? parseInt(ram) : null,
             tipo_ram: tipoRam,
             so_servidor: soVer,
           }),
@@ -263,6 +265,21 @@ export default function ActivoModal({
                     className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
                     value={anoCompra}
                     onChange={(e) => setAnoCompra(e.target.value)}
+                    onKeyDown={(e) => {
+                      // Permitir: números, backspace, delete, tab, arrows
+                      const permitidos = [
+                        "Backspace",
+                        "Delete",
+                        "Tab",
+                        "ArrowLeft",
+                        "ArrowRight",
+                        "ArrowUp",
+                        "ArrowDown",
+                      ];
+                      if (!/^\d$/.test(e.key) && !permitidos.includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     placeholder="2024"
                     type="number"
                   />
@@ -293,12 +310,19 @@ export default function ActivoModal({
                   <label className="text-xs text-slate-500 font-medium block mb-1">
                     Virtualizador
                   </label>
-                  <input
-                    className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                  <select
+                    className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
                     value={virtualizer}
-                    onChange={(e) => setVirtualizer(e.target.value)}
-                    placeholder="VMware"
-                  />
+                    onChange={(e) => {
+                      setVirtualizer(e.target.value);
+                    }}
+                  >
+                    {listadoVirtualizer.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 font-medium block mb-1">
@@ -308,6 +332,21 @@ export default function ActivoModal({
                     className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:border-indigo-400"
                     value={ram}
                     onChange={(e) => setRam(e.target.value)}
+                    onKeyDown={(e) => {
+                      // Permitir: números, backspace, delete, tab, arrows
+                      const permitidos = [
+                        "Backspace",
+                        "Delete",
+                        "Tab",
+                        "ArrowLeft",
+                        "ArrowRight",
+                        "ArrowUp",
+                        "ArrowDown",
+                      ];
+                      if (!/^\d$/.test(e.key) && !permitidos.includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
                     placeholder="16"
                     type="number"
                   />
@@ -316,23 +355,37 @@ export default function ActivoModal({
                   <label className="text-xs text-slate-500 font-medium block mb-1">
                     Tipo RAM
                   </label>
-                  <input
-                    className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                  <select
+                    className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
                     value={tipoRam}
-                    onChange={(e) => setTipoRam(e.target.value)}
-                    placeholder="DDR4"
-                  />
+                    onChange={(e) => {
+                      setTipoRam(e.target.value);
+                    }}
+                  >
+                    {listadoTipoRam.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 font-medium block mb-1">
                     SSOO Servidor
                   </label>
-                  <input
-                    className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:border-indigo-400"
+                  <select
+                    className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
                     value={soVer}
-                    onChange={(e) => setSoVer(e.target.value)}
-                    placeholder="WS-2022"
-                  />
+                    onChange={(e) => {
+                      setSoVer(e.target.value);
+                    }}
+                  >
+                    {listadoSoSrv.map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer mt-2">
                   <input

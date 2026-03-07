@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import {
   RefreshCcw,
@@ -96,6 +96,18 @@ export default function ActivosPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   // FILTRO DE MARCA
   const [filtroMarca, setFiltroMarca] = useState("");
+  const marcasDisponibles = useMemo(() => {
+    const base = filtroTecnico
+      ? activos.filter((a) => a.nombre_tecnico === filtroTecnico)
+      : activos;
+    return [
+      ...new Set(
+        base
+          .map((a) => a.marca_farmacia)
+          .filter((m): m is string => m !== null && m !== undefined),
+      ),
+    ];
+  }, [activos, filtroTecnico]);
   const refreshData = () => {
     fetch("/api/activos")
       .then((r) => r.json())
@@ -117,7 +129,7 @@ export default function ActivosPage() {
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [search, filtroFarmacia, filtroTecnico]);
+  }, [search, filtroFarmacia, filtroTecnico, filtroMarca]);
   // Técnicos únicos para filtro coordinador
   const tecnicosUnicos = [
     ...new Set(activos.map((a) => a.nombre_tecnico).filter(Boolean)),
@@ -178,23 +190,6 @@ export default function ActivosPage() {
         refreshData();
         setShowUpload(false);
       }
-      /* const promise = fetch("/api/activos/import", {
-        method: "POST",
-        body: formData,
-      }).then(async (r) => {
-        const data = await r.json();
-        if (!r.ok) throw new Error(data.error || "Error al importar"); // control de error por consola
-        return data;
-      });
-      await toast.promise(promise, {
-        loading: "Importando Excel...",
-        success: (d) =>
-          `Importación completa: ${d.insertados} insertados, ${d.actualizados} actualizados`,
-        error: (err) => err.message, // mensaje por consola del error de backend
-      });
-      e.target.value = "";
-      refreshData();
-      setShowUpload(false); */
     } catch {
       toast.error("Error inesperado al procesar el archivo");
     } finally {
@@ -224,7 +219,7 @@ export default function ActivosPage() {
       {/* TOOLBAR */}
       <div className="flex items-center justify-between bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm mb-4">
         <div className="flex items-center gap-3 flex-wrap">
-          <ActivosSearch onSearch={setSearch} className="w-32 lg:w-48"/>
+          <ActivosSearch onSearch={setSearch} className="w-32 lg:w-48" />
           <div className="w-px h-6 bg-slate-200" />
           <select
             className="text-sm border border-slate-200 rounded-md px-2 py-1.5 text-slate-600 outline-none w-32 lg:w-48"
@@ -244,7 +239,10 @@ export default function ActivosPage() {
             <select
               className="text-sm border border-slate-200 rounded-md px-2 py-1.5 text-slate-600 outline-none w-32 lg:w-48"
               value={filtroTecnico}
-              onChange={(e) => setFiltroTecnico(e.target.value)}
+              onChange={(e) => {
+                setFiltroTecnico(e.target.value);
+                setFiltroMarca("");
+              }}
             >
               <option value="">Técnico: Todos</option>
               {tecnicosUnicos.sort().map((t) => (
@@ -260,7 +258,12 @@ export default function ActivosPage() {
             onChange={(e) => setFiltroMarca(e.target.value)}
           >
             <option value="">Marca: Todas</option>
-            {[
+            {marcasDisponibles.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
+            ))}
+            {/* {[
               ...new Set(
                 activos
                   .map((a) => a.marca_farmacia)
@@ -272,7 +275,7 @@ export default function ActivosPage() {
                 <option key={m} value={m}>
                   {m}
                 </option>
-              ))}
+              ))} */}
           </select>
         </div>
         <div className="flex items-center gap-3 ml-auto">
@@ -282,7 +285,7 @@ export default function ActivosPage() {
                 onClick={() => setShowUpload(!showUpload)}
                 className="flex items-center gap-2 text-sm border border-slate-200 bg-white text-slate-600 px-3 py-1.5 rounded-md hover:bg-slate-50 transition"
               >
-                <Upload className="w-4 h-4" /> 
+                <Upload className="w-4 h-4" />
                 <span className="hidden lg:inline">Importar Excel</span>
               </button>
               <div className="w-px h-6 bg-slate-200" />

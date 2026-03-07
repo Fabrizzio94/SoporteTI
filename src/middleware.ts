@@ -18,5 +18,5 @@ export default withAuth(
 
 export const config = {
     // Esto bloquea el acceso si no hay sesión
-    matcher: ["/tecnicos/:path*", "/farmacias/:path*", "/dashboard/:path*", "/activos/:path*"]
+    matcher: ["/tecnicos/:path*", "/farmacias/:path*", "/dashboard/:path*", "/activos/:path*", "/actividades/:path*"]
 };

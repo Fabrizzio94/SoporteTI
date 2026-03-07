@@ -38,7 +38,7 @@ export default function FarmaciaModal({
   const [virtualizer, setVirtualizer] = useState("");
   const [ram, setRam] = useState<number | "">("");
   const [tipoRamSrv, setTipoRamSrv] = useState("");
-  const [tab, setTab] = useState<"general"| "servidor">("general");
+  const [tab, setTab] = useState<"general" | "servidor">("general");
   // variable para skeleton
   const [loading, setLoading] = useState(true);
   // variables datos
@@ -56,16 +56,16 @@ export default function FarmaciaModal({
     "INTCEL-2025 (v2)",
     "N/A",
   ];
-  const listaSoTerminales = ["WIN XP", "WIN 10", "N/A"];
-  const listadoVirtualizer = ["VMware", "BootManager","N/A"];
-  const listadoSoSrv = ["WS-2022","WS-2019","WS-2016"];
-  const listadoTipoRam = ["DDR5","DDR4","DDR3"];
-  const listadoTipoRack = ["3 NIVELES","2 NIVELES","GABINETE","SIN RACK"];
+  const listaSoTerminales = ["WIN 10", "WIN XP", "N/A"];
+  const listadoVirtualizer = ["VMware", "BootManager", "N/A"];
+  const listadoSoSrv = ["WS-2022", "WS-2019", "WS-2016"];
+  const listadoTipoRam = ["DDR4", "DDR3"];
+  const listadoTipoRack = ["3 NIVELES", "2 NIVELES", "GABINETE", "SIN RACK"];
   // HOOKS
   useEffect(() => {
     // fetch para traer consulta de tecnicos
     setLoading(true);
-    console.log("primer hook: "+ loading);
+    console.log("primer hook: " + loading);
     const start = Date.now();
     if (open) {
       fetch("/api/tecnicos")
@@ -82,8 +82,8 @@ export default function FarmaciaModal({
         .finally(() => {
           const elapsed = Date.now() - start;
           const remaining = Math.max(0, 600 - elapsed);
-          setTimeout(() => setLoading(false), remaining)
-        })
+          setTimeout(() => setLoading(false), remaining);
+        });
     }
   }, [open]);
   useEffect(() => {
@@ -93,26 +93,24 @@ export default function FarmaciaModal({
       setCedulaTecnico(farmacia.cedula_tecnico || "");
       setTipoFarmacia(farmacia.tipo_farmacia ?? "");
       setMarca(farmacia.marca ?? "");
-      //setAnoApertura(farmacia.ano_servidor ?? "");,
       setTecnologiaTerminales(farmacia.tecnologia_terminales ?? "");
       setSoTerminales(farmacia.ssoo_terminales ?? "");
       setNumPuntoVenta(farmacia.num_puntos_venta || 0);
       setTipoRack(farmacia.tipo_rack ?? "");
       setEstado(farmacia.estado ?? "");
       // En useEffect agrega:
-      setSoServidor(farmacia.so_servidor   ?? "");
-      setVirtualizer(farmacia.virtualizer  ?? "");
-      setRam(farmacia.ram                  ?? "");
-      setTipoRamSrv(farmacia.tipo_ram      ?? "");
-      setTimeout(() => setLoading(false),400);
-      console.log("salida hook: "+ loading);
+      setSoServidor(farmacia.so_servidor ?? "");
+      setVirtualizer(farmacia.virtualizer ?? "");
+      setRam(farmacia.ram ?? "");
+      setTipoRamSrv(farmacia.tipo_ram ?? "");
+      setTimeout(() => setLoading(false), 400);
+      console.log("salida hook: " + loading);
     } else {
       setOficina("");
       setNombre("");
       setCedulaTecnico(""); // combo box con tecnicos existentes
       setTipoFarmacia("Propia");
       setMarca("ECONOMICA");
-      //setAnoApertura(date.getFullYear().toString());
       setTecnologiaTerminales("INCEL-2025");
       setSoTerminales("WIN 10");
       setNumPuntoVenta(2);
@@ -132,7 +130,7 @@ export default function FarmaciaModal({
       // campos farmacia
       const response = await fetch("/api/farmacias", {
         method: "PUT",
-        headers: { "Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           oficina,
           tecnologiaTerminales,
@@ -142,7 +140,7 @@ export default function FarmaciaModal({
           estado,
         }),
       });
-      if(!response.ok) {
+      if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error ?? "Error al actualizar farmacia");
       }
@@ -150,7 +148,7 @@ export default function FarmaciaModal({
       if (farmacia?.codigo_servidor) {
         const resSrv = await fetch("/api/activos", {
           method: "PUT",
-          headers: { "Content-Type": "application/json"},
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             codigo_activo: farmacia.codigo_servidor,
             nombre_activo: "CPU",
@@ -164,13 +162,13 @@ export default function FarmaciaModal({
             es_principal: true,
           }),
         });
-        if(!resSrv.ok) {
+        if (!resSrv.ok) {
           const data = await resSrv.json();
-          throw new Error(data.error ?? "Error al actualizar datos servidor")
+          throw new Error(data.error ?? "Error al actualizar datos servidor");
         }
       }
       // solo arroja el toast cuando pasa cualquiera de los 2 para marca resultado ok
-      toast.success("Actualizado correctamente", {id: loadingToast});
+      toast.success("Actualizado correctamente", { id: loadingToast });
       onSaved();
     } catch (error) {
       toast.error("Hubo un error al procesar la solicitud", {
@@ -419,7 +417,6 @@ export default function FarmaciaModal({
                                     setSoServidor(e.target.value)
                                   }
                                 >
-                                  <option value="">— Sin especificar —</option>
                                   {listadoSoSrv.map((item) => (
                                     <option key={item} value={item}>
                                       {item}
@@ -438,7 +435,6 @@ export default function FarmaciaModal({
                                     setVirtualizer(e.target.value)
                                   }
                                 >
-                                  <option value="">— Sin especificar —</option>
                                   {listadoVirtualizer.map((item) => (
                                     <option key={item} value={item}>
                                       {item}
@@ -462,6 +458,24 @@ export default function FarmaciaModal({
                                         : Number(e.target.value),
                                     )
                                   }
+                                  onKeyDown={(e) => {
+                                    // Permitir: números, backspace, delete, tab, arrows
+                                    const permitidos = [
+                                      "Backspace",
+                                      "Delete",
+                                      "Tab",
+                                      "ArrowLeft",
+                                      "ArrowRight",
+                                      "ArrowUp",
+                                      "ArrowDown",
+                                    ];
+                                    if (
+                                      !/^\d$/.test(e.key) &&
+                                      !permitidos.includes(e.key)
+                                    ) {
+                                      e.preventDefault();
+                                    }
+                                  }}
                                   placeholder="Ej: 16"
                                 />
                               </div>
@@ -476,7 +490,6 @@ export default function FarmaciaModal({
                                     setTipoRamSrv(e.target.value)
                                   }
                                 >
-                                  <option value="">— Sin especificar —</option>
                                   {listadoTipoRam.map((item) => (
                                     <option key={item} value={item}>
                                       {item}

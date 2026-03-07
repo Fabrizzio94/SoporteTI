@@ -19,17 +19,22 @@ const MOTIVOS = [
   "Reasignado a otra farmacia",
 ];
 
-export default function ActividadModal({ open, actividad, onClose, onSaved }: Props) {
-  const [motivoBaja,       setMotivoBaja]       = useState("");
-  const [observacion,      setObservacion]      = useState("");
-  const [codigoReemplazo,  setCodigoReemplazo]  = useState("");
-  const [nuevaOficina,     setNuevaOficina]     = useState("");
+export default function ActividadModal({
+  open,
+  actividad,
+  onClose,
+  onSaved,
+}: Props) {
+  const [motivoBaja, setMotivoBaja] = useState("");
+  const [observacion, setObservacion] = useState("");
+  const [codigoReemplazo, setCodigoReemplazo] = useState("");
+  const [nuevaOficina, setNuevaOficina] = useState("");
   const [confirmarReactivar, setConfirmarReactivar] = useState(false);
 
   useEffect(() => {
     if (actividad) {
-      setMotivoBaja(actividad.motivo_baja        ?? "");
-      setObservacion(actividad.observacion       ?? "");
+      setMotivoBaja(actividad.motivo_baja ?? "");
+      setObservacion(actividad.observacion ?? "");
       setCodigoReemplazo(actividad.codigo_reemplazo ?? "");
       setNuevaOficina("");
       setConfirmarReactivar(false);
@@ -43,10 +48,10 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id:               actividad?.id,
-          motivo_baja:      motivoBaja,
-          observacion:      observacion      || null,
-          codigo_reemplazo: codigoReemplazo  || null,
+          id: actividad?.id,
+          motivo_baja: motivoBaja,
+          observacion: observacion || null,
+          codigo_reemplazo: codigoReemplazo || null,
         }),
       });
       if (!res.ok) {
@@ -67,10 +72,10 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id:            actividad?.id,
-          reactivar:     true,
+          id: actividad?.id,
+          reactivar: true,
           nueva_oficina: nuevaOficina || null,
-          observacion:   observacion  || null,
+          observacion: observacion || null,
         }),
       });
       if (!res.ok) {
@@ -86,30 +91,36 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
 
   if (!open || !actividad) return null;
 
-  const esFranquicia  = actividad.tipo_farmacia === "Franquicia";
-  const esVerificado  = actividad.verificado;
+  const esFranquicia = actividad.tipo_farmacia === "Franquicia";
+  const esVerificado = actividad.verificado;
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-lg rounded-xl shadow-xl max-h-[90vh] flex flex-col">
-
         {/* HEADER */}
         <div className="flex justify-between items-start px-5 py-4 border-b border-slate-100 shrink-0">
           <div>
             <h2 className="text-sm font-bold text-slate-800">
               Detalle de Baja ·{" "}
-              <span className="font-mono text-indigo-500">{actividad.codigo_activo}</span>
+              <span className="font-mono text-indigo-500">
+                {actividad.codigo_activo}
+              </span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              {actividad.nombre_activo} · {actividad.oficina} · {actividad.nombre_farmacia}
+              {actividad.nombre_activo} · {actividad.oficina} ·{" "}
+              {actividad.nombre_farmacia}
             </p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg leading-none mt-0.5">✕</button>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 text-lg leading-none mt-0.5"
+          >
+            ✕
+          </button>
         </div>
 
         {/* BODY */}
         <div className="px-5 py-4 overflow-y-auto flex-1 space-y-4">
-
           {/* DATOS READONLY */}
           <div>
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 pb-1.5 border-b border-slate-100">
@@ -118,7 +129,9 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <p className="text-xs text-slate-400 mb-1">Técnico</p>
-                <p className="text-sm font-medium text-slate-700">{actividad.nombre_tecnico ?? "—"}</p>
+                <p className="text-sm font-medium text-slate-700">
+                  {actividad.nombre_tecnico ?? "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-slate-400 mb-1">Fecha Baja</p>
@@ -128,32 +141,40 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
               </div>
               <div>
                 <p className="text-xs text-slate-400 mb-1">Año Compra</p>
-                <p className="text-sm font-medium text-slate-700">{actividad.ano_compra ?? "—"}</p>
+                <p className="text-sm font-medium text-slate-700">
+                  {actividad.ano_compra ?? "—"}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-slate-400 mb-1">Tipo</p>
-                <span className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  esFranquicia
-                    ? "bg-slate-100 text-slate-500"
+                <span
+                  className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    esFranquicia
+                      ? "bg-slate-100 text-slate-500"
+                      : esVerificado
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-yellow-50 text-yellow-700"
+                  }`}
+                >
+                  {esFranquicia
+                    ? "🏪 Franquicia"
                     : esVerificado
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-yellow-50 text-yellow-700"
-                }`}>
-                  {esFranquicia ? "🏪 Franquicia" : esVerificado ? "✓ Verificado" : "⏳ Pendiente"}
+                      ? "✓ Verificado"
+                      : "⏳ Pendiente"}
                 </span>
               </div>
               {actividad.fecha_verificacion && (
                 <div>
-                  <p className="text-xs text-slate-400 mb-1">Fecha Verificación</p>
+                  <p className="text-xs text-slate-400 mb-1">
+                    Fecha Verificación
+                  </p>
                   <p className="text-sm font-medium text-slate-700">
-                    {new Date(actividad.fecha_verificacion).toLocaleDateString("es-EC")}
+                    {new Date(actividad.fecha_verificacion).toLocaleDateString(
+                      "es-EC",
+                    )}
                   </p>
                 </div>
               )}
-              <div>
-                <p className="text-xs text-slate-400 mb-1">Registrado por</p>
-                <p className="text-sm font-medium text-slate-700">{actividad.usuario_baja ?? "—"}</p>
-              </div>
             </div>
           </div>
 
@@ -164,18 +185,26 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
             </p>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-slate-500 font-medium block mb-1">Motivo de Baja</label>
+                <label className="text-xs text-slate-500 font-medium block mb-1">
+                  Motivo de Baja
+                </label>
                 <select
                   className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
                   value={motivoBaja}
                   onChange={(e) => setMotivoBaja(e.target.value)}
                 >
                   <option value="">— Seleccionar —</option>
-                  {MOTIVOS.map((m) => <option key={m} value={m}>{m}</option>)}
+                  {MOTIVOS.map((m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-slate-500 font-medium block mb-1">Observación</label>
+                <label className="text-xs text-slate-500 font-medium block mb-1">
+                  Observación
+                </label>
                 <textarea
                   rows={2}
                   className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400 resize-none"
@@ -186,7 +215,8 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
               </div>
               <div>
                 <label className="text-xs text-slate-500 font-medium block mb-1">
-                  Código Reemplazo <span className="text-slate-300">(opcional)</span>
+                  Código Reemplazo{" "}
+                  <span className="text-slate-300">(opcional)</span>
                 </label>
                 <input
                   type="text"
@@ -207,14 +237,18 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
             <div className="space-y-0">
               {/* Registro actual */}
               <div className="flex gap-2 items-start py-2 border-b border-slate-50">
-                <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${esVerificado ? "bg-emerald-400" : "bg-yellow-400"}`} />
+                <span
+                  className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${esVerificado ? "bg-emerald-400" : "bg-yellow-400"}`}
+                />
                 <div>
                   <p className="text-xs font-semibold text-slate-700">
                     {esVerificado ? "Baja verificada" : "Baja registrada"}
                   </p>
                   <p className="text-[10px] text-slate-400 mt-0.5">
-                    {new Date(actividad.fecha_baja).toLocaleDateString("es-EC")} · {actividad.usuario_baja} · {actividad.motivo_baja}
-                    {actividad.fecha_verificacion && ` · Verificado ${new Date(actividad.fecha_verificacion).toLocaleDateString("es-EC")}`}
+                    {new Date(actividad.fecha_baja).toLocaleDateString("es-EC")}{" "}
+                    · {actividad.motivo_baja}
+                    {actividad.fecha_verificacion &&
+                      ` · Verificado ${new Date(actividad.fecha_verificacion).toLocaleDateString("es-EC")}`}
                   </p>
                 </div>
               </div>
@@ -222,9 +256,12 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
               <div className="flex gap-2 items-start py-2">
                 <span className="w-2 h-2 rounded-full mt-1.5 shrink-0 bg-indigo-400" />
                 <div>
-                  <p className="text-xs font-semibold text-slate-700">Registro activo</p>
+                  <p className="text-xs font-semibold text-slate-700">
+                    Registro activo
+                  </p>
                   <p className="text-[10px] text-slate-400 mt-0.5">
-                    {actividad.oficina} · {actividad.nombre_farmacia} · Año {actividad.ano_compra ?? "—"}
+                    {actividad.oficina} · {actividad.nombre_farmacia} · Año{" "}
+                    {actividad.ano_compra ?? "—"}
                   </p>
                 </div>
               </div>
@@ -241,10 +278,15 @@ export default function ActividadModal({ open, actividad, onClose, onSaved }: Pr
             </button>
           ) : (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-2">
-              <p className="text-xs font-semibold text-emerald-700">¿Confirmar reactivación?</p>
+              <p className="text-xs font-semibold text-emerald-700">
+                ¿Confirmar reactivación?
+              </p>
               <div>
                 <label className="text-xs text-slate-500 font-medium block mb-1">
-                  Nueva farmacia <span className="text-slate-300">(opcional — si se reasigna)</span>
+                  Nueva farmacia{" "}
+                  <span className="text-slate-300">
+                    (opcional — si se reasigna)
+                  </span>
                 </label>
                 <input
                   type="text"

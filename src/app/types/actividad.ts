@@ -11,7 +11,6 @@ export type Actividad = {
   observacion?: string;
   ano_compra?: number;
   codigo_reemplazo?: string;
-  usuario_baja?: string;
   fecha_baja: string;
   tipo_baja: "MANUAL" | "AUTO";
   verificado: boolean;
