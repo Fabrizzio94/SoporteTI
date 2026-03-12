@@ -14,6 +14,7 @@ export default function FarmaciasPage() {
     useState<Partial<Farmacia> | null>(null);
   // toggle para mostrar inactivos
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [habilitarBoton, setHabilitarBoton] = useState(false); // maneja boton para habilitar despues de sincronizar
   // Ref para detectar clic afuera del dropdown
   const dropdownRef = useRef<HTMLDivElement>(null);
   // paginacion
@@ -32,21 +33,26 @@ export default function FarmaciasPage() {
   };
   const handleSincronizar = async () => {
     setIsSyn(true);
-    const promise = fetch("/api/farmacias/sync", { method: "POST" }).then(
-      async (res) => {
-        console.log(res);
-        if (!res.ok) throw new Error("Error en la red");
-        return res.json();
-      },
-    );
-    await toast.promise(promise, {
-      loading: "Sincronizando con Matriz...",
-      success: (data) =>
-        `Sincronizacion completa, se procesaron ${data.count} farmacias.`,
-      error: "Error al sincronizar, verifica conexion al dominio.",
-    });
-    setIsSyn(false);
-    refreshData();
+    setHabilitarBoton(true);
+    try {
+      const promise = fetch("/api/farmacias/sync", { method: "POST" }).then(
+        async (res) => {
+          console.log(res);
+          if (!res.ok) throw new Error("Error en la red");
+          return res.json();
+        },
+      );
+      await toast.promise(promise, {
+        loading: "Sincronizando con Matriz...",
+        success: (data) =>
+          `Sincronizacion completa, se procesaron ${data.count} farmacias.`,
+        error: "Error al sincronizar, verifica conexion al dominio.",
+      });
+      refreshData();
+    } finally {
+      setIsSyn(false);
+      setHabilitarBoton(false);
+    }
   };
   useEffect(() => {
     fetch("/api/farmacias")
@@ -112,92 +118,92 @@ export default function FarmaciasPage() {
     <main className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Farmacias</h1>
       <div className="justify-between bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm mb-4 flex items-center gap-2 flex-wrap">
-          <FarmaciasSearch onSearch={setSearch} className="wd-32 md:w-48"/>
-          {/* Contador — antes de FarmaciasTable */}
-          <div className="flex flex-wrap items-center gap-3">
-            {user?.role === "COORDINADOR" && (
-              <span className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-medium">
-                Total: <b>{conteoTotal}</b> farmacia
-                {conteoTotal !== 1 ? "s" : ""}
-              </span>
-            )}
-            <div className="w-px h-6 bg-slate-200" />
-            <span className="text-sm bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full font-medium">
-              Propias: <b>{conteoPropia}</b>
-            </span>
-            <span className="text-sm bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-medium">
-              Franquicias: <b>{conteoFranquicia}</b>
-            </span>
-            <div className="w-px h-6 bg-slate-200" /> {/* separador */}
-          </div>
+        <FarmaciasSearch onSearch={setSearch} className="wd-32 md:w-48" />
+        {/* Contador — antes de FarmaciasTable */}
+        <div className="flex flex-wrap items-center gap-3">
           {user?.role === "COORDINADOR" && (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setMostrarConteo(!mostrarConteo)}
-                className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-medium flex items-center gap-2"
-              >
-                Total: farmacias por tecnico
-                <span>{mostrarConteo ? "▲" : "▼"}</span>
-              </button>
-
-              {mostrarConteo && (
-                <div className="absolute top-8 left-0 z-10 bg-white border border-slate-200 rounded-lg shadow-xl p-2 min-w-108 max-h-84 overflow-y-auto">
-                  {Object.entries(conteoPorTecnico)
-                    .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([tecnico, count]) => (
-                      <div
-                        key={tecnico}
-                        className="flex justify-between text-sm px-2 py-1 hover:bg-lime-300 rounded"
-                      >
-                        <span className="text-slate-700 group-hover:text-indigo-700 group-hover:font-medium transition-colors">
-                          {tecnico}
-                        </span>
-                        <span className="font-bold text-indigo-600 bg-indigo-50 group-hover:bg-indigo-200 group-hover:text-indigo-800 px-2 py-0.5 rounded-full ml-4 transition-colors">
-                          {count}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          )}
-          {user?.role === "TECNICO" && (
-            // Técnico solo ve su conteo
-            <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
-              Tus farmacias: <b>{conteoTotal}</b>
+            <span className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-medium">
+              Total: <b>{conteoTotal}</b> farmacia
+              {conteoTotal !== 1 ? "s" : ""}
             </span>
           )}
-          <div>
-
-          <div className="flex items-center gap-2 ml-auto shrink-0">
-          <label className="flex items-center cursor-pointer gap-2 bg-gray-100 p-2 rounded-md shrink-0">
-            <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-              Ver Inactivos
-            </span>
-            <input
-              type="checkbox"
-              className="sr-only peer"
-              checked={mostrarInactivos}
-              onChange={() => setMostrarInactivos(!mostrarInactivos)}
-            />
-            <div className="relative w-9 h-5 bg-neutral-quaternary rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600 dark:peer-checked:bg-teal-600"></div>
-          </label>
-
-          {user?.role === "COORDINADOR" && (
+          <div className="w-px h-6 bg-slate-200" />
+          <span className="text-sm bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full font-medium">
+            Propias: <b>{conteoPropia}</b>
+          </span>
+          <span className="text-sm bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-medium">
+            Franquicias: <b>{conteoFranquicia}</b>
+          </span>
+          <div className="w-px h-6 bg-slate-200" /> {/* separador */}
+        </div>
+        {user?.role === "COORDINADOR" && (
+          <div className="relative" ref={dropdownRef}>
             <button
-              onClick={handleSincronizar}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md shadow transition-all shrink-0"
+              onClick={() => setMostrarConteo(!mostrarConteo)}
+              className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-medium flex items-center gap-2"
             >
-              <RefreshCcw
-                className={`w-4 h-4 ${isSyn ? "animate-spin" : ""}`}
-              />
-              <span className="hidden lg:inline whitespace-nowrap">
-                {isSyn ? "Sincronizando..." : "Sincronizar Matriz"}
-              </span>
+              Total: farmacias por tecnico
+              <span>{mostrarConteo ? "▲" : "▼"}</span>
             </button>
-          )}
-</div>
-      </div>
+
+            {mostrarConteo && (
+              <div className="absolute top-8 left-0 z-10 bg-white border border-slate-200 rounded-lg shadow-xl p-2 min-w-108 max-h-84 overflow-y-auto">
+                {Object.entries(conteoPorTecnico)
+                  .sort((a, b) => a[0].localeCompare(b[0]))
+                  .map(([tecnico, count]) => (
+                    <div
+                      key={tecnico}
+                      className="flex justify-between text-sm px-2 py-1 hover:bg-lime-300 rounded"
+                    >
+                      <span className="text-slate-700 group-hover:text-indigo-700 group-hover:font-medium transition-colors">
+                        {tecnico}
+                      </span>
+                      <span className="font-bold text-indigo-600 bg-indigo-50 group-hover:bg-indigo-200 group-hover:text-indigo-800 px-2 py-0.5 rounded-full ml-4 transition-colors">
+                        {count}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+        {user?.role === "TECNICO" && (
+          // Técnico solo ve su conteo
+          <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
+            Tus farmacias: <b>{conteoTotal}</b>
+          </span>
+        )}
+        <div>
+          <div className="flex items-center gap-2 ml-auto shrink-0">
+            <label className="flex items-center cursor-pointer gap-2 bg-gray-100 p-2 rounded-md shrink-0">
+              <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                Ver Inactivos
+              </span>
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={mostrarInactivos}
+                onChange={() => setMostrarInactivos(!mostrarInactivos)}
+              />
+              <div className="relative w-9 h-5 bg-neutral-quaternary rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600 dark:peer-checked:bg-teal-600"></div>
+            </label>
+
+            {user?.role === "COORDINADOR" && (
+              <button
+                disabled={habilitarBoton}
+                onClick={handleSincronizar}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md shadow transition-all shrink-0"
+              >
+                <RefreshCcw
+                  className={`w-4 h-4 ${isSyn ? "animate-spin" : ""}`}
+                />
+                <span className="hidden lg:inline whitespace-nowrap">
+                  {isSyn ? "Sincronizando..." : "Sincronizar Matriz"}
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
       <FarmaciaModal
         open={!!farmaciasSeleccionada}
@@ -212,11 +218,11 @@ export default function FarmaciasPage() {
           refreshData();
         }}
       />
-          <FarmaciasTable
-            farmacias={farmaciasPaginadas}
-            onEdit={(t) => setFarmaciaSeleccionada(t)}
-          />
-     
+      <FarmaciasTable
+        farmacias={farmaciasPaginadas}
+        onEdit={(t) => setFarmaciaSeleccionada(t)}
+      />
+
       {/* paginacion de farmacias */}
       <div className="mt-6 flex items-center justify-between">
         <select

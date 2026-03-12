@@ -6,7 +6,7 @@ export interface Tecnico {
   celular: string;
   estado: string;
   usuario: string;
-  password: string;
+  password?: string | null;
   rol: string;
 }
 

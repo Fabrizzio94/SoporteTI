@@ -94,6 +94,7 @@ export default function ActivosPage() {
   const [paginaActual, setPaginaActual] = useState(1);
   const [registroPorPagina, setRegistroPorPagina] = useState(10);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [habilitarBoton, setHabilitarBoton] = useState(false);
   // FILTRO DE MARCA
   const [filtroMarca, setFiltroMarca] = useState("");
   const marcasDisponibles = useMemo(() => {
@@ -132,7 +133,11 @@ export default function ActivosPage() {
   }, [search, filtroFarmacia, filtroTecnico, filtroMarca]);
   // Técnicos únicos para filtro coordinador
   const tecnicosUnicos = [
-    ...new Set(activos.map((a) => a.nombre_tecnico).filter(Boolean)),
+    ...new Set(
+      activos
+        .map((a) => a.nombre_tecnico)
+        .filter((t): t is string => t != null && t !== undefined),
+    ),
   ];
 
   // Filtrado
@@ -175,6 +180,7 @@ export default function ActivosPage() {
     formData.append("file", file);
     try {
       const toastId = toast.loading("Importando Excel...");
+      setHabilitarBoton(true);
       const r = await fetch("/api/activos/import", {
         method: "POST",
         body: formData,
@@ -194,6 +200,7 @@ export default function ActivosPage() {
       toast.error("Error inesperado al procesar el archivo");
     } finally {
       e.target.value = "";
+      setHabilitarBoton(false);
     }
   };
   return (
@@ -263,19 +270,6 @@ export default function ActivosPage() {
                 {m}
               </option>
             ))}
-            {/* {[
-              ...new Set(
-                activos
-                  .map((a) => a.marca_farmacia)
-                  .filter((m): m is string => !!m),
-              ),
-            ]
-              .sort()
-              .map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))} */}
           </select>
         </div>
         <div className="flex items-center gap-3 ml-auto">
@@ -292,6 +286,7 @@ export default function ActivosPage() {
             </>
           )}
           <button
+            disabled={habilitarBoton}
             onClick={() => {
               setActivoSeleccionado(null);
               setModalOpen(true);
@@ -340,12 +335,14 @@ export default function ActivosPage() {
           />
           <div className="flex gap-2 justify-center">
             <button
+              disabled={habilitarBoton}
               onClick={() => setShowUpload(false)}
               className="text-sm border border-slate-200 bg-white px-4 py-1.5 rounded-md text-slate-600"
             >
               Cancelar
             </button>
             <button
+              disabled={habilitarBoton}
               onClick={() => fileRef.current?.click()}
               className="text-sm bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-md"
             >

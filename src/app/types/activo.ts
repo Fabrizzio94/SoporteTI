@@ -6,8 +6,8 @@ export type Activo = {
     estado: string;
     oficina: string;
     nombre_farmacia?: string;
-    cedula_tecnico?: string;
-    nombre_tecnico?: string;
+    cedula_tecnico?: string | null;
+    nombre_tecnico?: string | null;
     marca_farmacia?: string | null;
     // Datos servidor (solo si nombre_activo = 'CPU')
     virtualizer?: string | null;

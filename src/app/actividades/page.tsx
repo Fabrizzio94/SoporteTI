@@ -79,6 +79,8 @@ export default function ActividadesPage() {
 
   // Paginación
   const [pagina, setPagina] = useState(1);
+  //const [paginaActual, setPaginaActual] = useState(1);
+  const [registroPorPagina, setRegistroPorPagina] = useState(10);
 
   // Modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -137,12 +139,24 @@ export default function ActividadesPage() {
     fetchData();
   }, [fetchData]);
 
-  const totalPaginas = Math.ceil(actividades.length / FILAS_POR_PAGINA);
+  //const totalPaginas = Math.ceil(actividades.length / FILAS_POR_PAGINA);
   const actividadesPag = actividades.slice(
     (pagina - 1) * FILAS_POR_PAGINA,
     pagina * FILAS_POR_PAGINA,
   );
-
+  const filtered = actividades.filter((t) => {
+    const cumpleBusqueda =
+      t.codigo_activo?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      t.oficina.includes(busqueda) ||
+      t.nombre_tecnico?.toLowerCase().includes(busqueda.toLowerCase()) ||
+      t.nombre_activo.toLowerCase().includes(busqueda.toLowerCase());
+    return cumpleBusqueda;
+  });
+  // PAGINACION
+  const ultimoIndice = pagina * registroPorPagina;
+  const primerIndice = ultimoIndice - registroPorPagina;
+  const activosPaginados = actividadesPag.slice(primerIndice, ultimoIndice);
+  const totalPaginas = Math.ceil(actividadesPag.length / registroPorPagina);
   const abrirModal = (a: Actividad) => {
     setActividadModal(a);
     setModalOpen(true);
@@ -392,37 +406,82 @@ export default function ActividadesPage() {
 
         {/* PAGINACIÓN */}
         <div className="flex items-center justify-between px-4 py-2.5 border-t border-slate-100">
-          <span className="text-[11px] text-slate-400">
-            {actividades.length === 0
-              ? "Sin registros"
-              : `${(pagina - 1) * FILAS_POR_PAGINA + 1}–${Math.min(pagina * FILAS_POR_PAGINA, actividades.length)} de ${actividades.length}`}
-          </span>
-          <div className="flex gap-1">
+          <div className="flex gap-3 px-4 py-2.5 border-t border-slate-100">
+            <span className="text-[11px] text-slate-400">
+              {actividades.length === 0
+                ? "Sin registros"
+                : `${(pagina - 1) * FILAS_POR_PAGINA + 1}–${Math.min(pagina * FILAS_POR_PAGINA, actividades.length)} de ${actividades.length}`}
+            </span>
+            <select
+              className="text-sm border border-slate-200 rounded-md px-2 py-1 text-slate-600"
+              value={registroPorPagina}
+              onChange={(e) => {
+                setRegistroPorPagina(Number(e.target.value));
+                setPagina(1);
+              }}
+            >
+              <option value={10}>10 por página</option>
+              <option value={25}>25 por página</option>
+              <option value={50}>50 por página</option>
+            </select>
+          </div>
+          {/* Contenedor de botones centrado */}
+          <div className="flex items-center space-x-1">
+            {/* Botón Anterior */}
             <button
-              onClick={() => setPagina((p) => Math.max(1, p - 1))}
+              onClick={() => setPagina((prev) => Math.max(prev - 1, 1))}
               disabled={pagina === 1}
-              className="border border-slate-200 rounded px-2 py-0.5 text-[11px] text-slate-500 disabled:opacity-40"
+              className="rounded-md border border-slate-300 py-2 px-3 text-sm shadow-sm hover:bg-slate-800 hover:text-white disabled:opacity-50 transition-all"
             >
-              ‹
+              Anterior
             </button>
-            {Array.from(
-              { length: Math.min(totalPaginas, 5) },
-              (_, i) => i + 1,
-            ).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPagina(p)}
-                className={`border rounded px-2 py-0.5 text-[11px] ${pagina === p ? "bg-indigo-600 text-white border-indigo-600" : "border-slate-200 text-slate-500"}`}
-              >
-                {p}
-              </button>
-            ))}
+
+            {/* Renderizado de números con Elipsis */}
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(
+              (num) => {
+                // Lógica de Elipsis: Mostrar siempre primera, última y las 2 alrededor de la actual
+                if (
+                  num === 1 ||
+                  num === totalPaginas ||
+                  (num >= pagina - 1 && num <= pagina + 1)
+                ) {
+                  return (
+                    <button
+                      key={num}
+                      onClick={() => setPagina(num)}
+                      className={`min-w-9 rounded-md py-2 px-3 text-sm transition-all ${
+                        pagina === num
+                          ? "bg-slate-800 text-white shadow-md"
+                          : "border border-slate-300 text-slate-600 hover:bg-slate-800 hover:text-white"
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  );
+                }
+
+                // Mostrar puntos suspensivos solo una vez en cada hueco
+                if (num === pagina - 2 || num === pagina + 2) {
+                  return (
+                    <span key={num} className="px-1 text-slate-400">
+                      ...
+                    </span>
+                  );
+                }
+
+                return null;
+              },
+            )}
+
+            {/* Botón Siguiente */}
             <button
-              onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
-              disabled={pagina === totalPaginas || totalPaginas === 0}
-              className="border border-slate-200 rounded px-2 py-0.5 text-[11px] text-slate-500 disabled:opacity-40"
+              onClick={() =>
+                setPagina((prev) => Math.min(prev + 1, totalPaginas))
+              }
+              disabled={pagina === totalPaginas}
+              className="rounded-md border border-slate-300 py-2 px-3 text-sm shadow-sm hover:bg-slate-800 hover:text-white disabled:opacity-50 transition-all"
             >
-              ›
+              Siguiente
             </button>
           </div>
         </div>
