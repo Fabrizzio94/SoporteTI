@@ -145,7 +145,8 @@ export default function ActivosPage() {
     const cumpleBusqueda =
       a.codigo_activo.includes(search) ||
       a.nombre_activo.toLowerCase().includes(search.toLowerCase()) ||
-      a.nombre_farmacia?.toLowerCase().includes(search.toLowerCase());
+      a.nombre_farmacia?.toLowerCase().includes(search.toLowerCase()) ||
+      a.descripcion?.toLowerCase().includes(search.toLowerCase());
     const cumpleFarmacia = filtroFarmacia
       ? a.nombre_farmacia === filtroFarmacia
       : true;
