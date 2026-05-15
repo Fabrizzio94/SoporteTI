@@ -1,10 +1,11 @@
 import { getConnection, getMatrizConnection } from "@/lib/db";
+import { NextResponse } from "next/server";
 
 export const procesarSync = async () => {
-    const poolMatriz = await getMatrizConnection();
-    const poolLocal = await getConnection();
+  const poolMatriz = await getMatrizConnection();
+  const poolLocal = await getConnection();
 
-    const resultMatriz = await poolMatriz.request().query(`
+  const resultMatriz = await poolMatriz.request().query(`
     SELECT 
       OFI.OFICINA   AS OFICINA,
       OFI.NOMBRE    AS FARMACIA,
@@ -14,52 +15,57 @@ export const procesarSync = async () => {
       AT.tec_apellido AS APELLIDOS,
       SU.NOMBRE       AS SUCURSAL,
       OFI.ES_FRANQUICIA AS FRANQUICIA,
-      US.NombreCorto  AS USUARIO
+      US.NombreCorto  AS USUARIO,
+      US.password AS PASSWORD
     FROM DBO.OFICINA AS OFI WITH(NOLOCK)
     INNER JOIN [dbo].[SP_PAR_AsignacionFarmacias] AS AF ON OFI.Oficina = AF.af_idoficina
     INNER JOIN [dbo].[SP_PAR_Tecnicos] AS AT ON AF.af_cedula = AT.tec_cedula
     INNER JOIN COMISIONES.BDGENERAL.DBO.SUCURSALES AS SU 
       ON SU.CODIGO_SUCURSAL COLLATE SQL_Latin1_General_CP1_CI_AS = OFI.SUCURSAL COLLATE SQL_Latin1_General_CP1_CI_AS
+    INNER JOIN 
+    COMISIONES.BDGENERAL.DBO.OFICINA_IP_SERVER AS OIP 
+    ON OFI.Oficina COLLATE SQL_Latin1_General_CP1_CI_AS = OIP.oficina COLLATE SQL_Latin1_General_CP1_CI_AS
     LEFT JOIN EasySeguridad.dbo.usuarios AS US ON US.cedula = AT.tec_cedula
     WHERE OFI.ESTADO = 'A'
   `);
 
-    const listaMatriz = resultMatriz.recordset;
-    const tecnicosProcesados = new Set<string>();
+  const listaMatriz = resultMatriz.recordset;
+  const tecnicosProcesados = new Set<string>();
 
-    for (const f of listaMatriz) {
-        // ── TÉCNICOS ─────────────────────────────────────────────
-        if (f.CEDULA_TECNICO && !tecnicosProcesados.has(f.CEDULA_TECNICO)) {
-            tecnicosProcesados.add(f.CEDULA_TECNICO);
+  for (const f of listaMatriz) {
+    // ── TÉCNICOS ─────────────────────────────────────────────
+    if (f.CEDULA_TECNICO && !tecnicosProcesados.has(f.CEDULA_TECNICO)) {
+      tecnicosProcesados.add(f.CEDULA_TECNICO);
 
-            await poolLocal.request()
-                .input("cedula", f.CEDULA_TECNICO)
-                .input("nombres", f.NOMBRES)
-                .input("apellidos", f.APELLIDOS)
-                .input("usuario", f.USUARIO ?? null)
-                .query(`
+      await poolLocal.request()
+        .input("cedula", f.CEDULA_TECNICO)
+        .input("nombres", f.NOMBRES)
+        .input("apellidos", f.APELLIDOS)
+        .input("usuario", f.USUARIO ?? null)
+        .input("password", f.PASSWORD)
+        .query(`
           IF NOT EXISTS (SELECT 1 FROM tecnicos WHERE cedula = @cedula)
           BEGIN
-            INSERT INTO tecnicos (cedula, nombres, apellidos, estado, rol, usuario)
-            VALUES (@cedula, @nombres, @apellidos, 'A', 'TECNICO', @usuario)
+            INSERT INTO tecnicos (cedula, nombres, apellidos, estado, rol, usuario, password)
+            VALUES (@cedula, @nombres, @apellidos, 'A', 'TECNICO', @usuario, @password)
           END
           ELSE
           BEGIN
             UPDATE tecnicos
-            SET usuario = @usuario, nombres = @nombres, apellidos = @apellidos
-            WHERE cedula = @cedula AND usuario IS NULL
+            SET usuario = @usuario, nombres = @nombres, apellidos = @apellidos, password = @password
+            WHERE cedula = @cedula
           END
         `);
-        }
+    }
 
-        // ── FARMACIAS ─────────────────────────────────────────────
-        await poolLocal.request()
-            .input("oficina", f.OFICINA)
-            .input("nombre", f.FARMACIA)
-            .input("cedula_tecnico", f.CEDULA_TECNICO)
-            .input("tipo", f.FRANQUICIA === "S" ? "Franquicia" : "Propia")
-            .input("marca", f.SUCURSAL)
-            .query(`
+    // ── FARMACIAS ─────────────────────────────────────────────
+    await poolLocal.request()
+      .input("oficina", f.OFICINA)
+      .input("nombre", f.FARMACIA)
+      .input("cedula_tecnico", f.CEDULA_TECNICO)
+      .input("tipo", f.FRANQUICIA === "S" ? "Franquicia" : "Propia")
+      .input("marca", f.SUCURSAL)
+      .query(`
         MERGE INTO farmacia AS Destino
         USING (SELECT @oficina AS oficina) AS Origen
           ON Destino.oficina = Origen.oficina
@@ -74,20 +80,30 @@ export const procesarSync = async () => {
           INSERT (oficina, nombre, cedula_tecnico, tipo_farmacia, marca, estado, fecha_sync)
           VALUES (@oficina, @nombre, @cedula_tecnico, @tipo, @marca, 'A', GETDATE());
       `);
-    }
-
-    // ── INACTIVAR farmacias que ya no vienen de matriz ────────
-    const oficinasVivas = listaMatriz.map((f) => `'${f.OFICINA}'`).join(",");
-    if (oficinasVivas.length > 0) {
-        await poolLocal.request().query(`
+  }
+  // --- INACTIVAR TECNICOS que ya no vienen de matriz ---------
+  const cedulas = Array.from(tecnicosProcesados).join(",");
+  if (cedulas.length === 0) {
+    return NextResponse.json({ error: "Sin datos de matriz, sync abortado" }, { status: 500 });
+  }
+  await poolLocal.request().query(`
+      UPDATE tecnicos
+      SET estado = 'I'
+      WHERE cedula NOT IN (${cedulas})
+      AND estado = 'A'
+    `)
+  // ── INACTIVAR farmacias que ya no vienen de matriz ────────
+  const oficinasVivas = listaMatriz.map((f) => `'${f.OFICINA}'`).join(",");
+  if (oficinasVivas.length > 0) {
+    await poolLocal.request().query(`
       UPDATE farmacia SET estado = 'I'
       WHERE oficina NOT IN (${oficinasVivas})
     `);
-    }
+  }
 
-    return {
-        ok: true,
-        message: "Sincronización completada",
-        count: listaMatriz.length,
-    };
+  return {
+    ok: true,
+    message: "Sincronización completada",
+    count: listaMatriz.length,
+  };
 };

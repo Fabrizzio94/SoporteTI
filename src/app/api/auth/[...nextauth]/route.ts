@@ -1,8 +1,8 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import { getConnection } from "@/lib/db";
 import { Usuario } from "@/app/types/tecnico"
+import { verifyPassword } from "@/lib/password";
 export const authOptions: NextAuthOptions = {
     providers: [
         CredentialsProvider({
@@ -18,19 +18,21 @@ export const authOptions: NextAuthOptions = {
                     .query("SELECT * FROM tecnicos WHERE usuario = @usuario AND estado = 'A'");
 
                 const user = result.recordset[0]; // Obtenemos el primer registro
-                const hashBD = user.password.trim();
-                const passwordIngresado = credentials?.password.trim();
-                const passwordMatch = bcrypt.compareSync(passwordIngresado!, hashBD);
+                if (!user) return null; // si no existe el usuario retorna
 
-                if (user && passwordMatch) {
-                    return {
-                        id: user.cedula,
-                        name: `${user.nombres} ${user.apellidos} `,
-                        role: user.rol,
-                        cedula: user.cedula
-                    };
-                }
-                return null;
+                const isValid = verifyPassword(
+                    credentials?.password ?? "",
+                    user.password
+                );
+
+                if (!isValid) return null;
+
+                return {
+                    id: user.cedula,
+                    name: `${user.nombres} ${user.apellidos}`,
+                    role: user.rol,
+                    cedula: user.cedula
+                };
             }
         })
     ],

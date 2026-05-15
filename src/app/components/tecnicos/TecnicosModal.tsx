@@ -113,25 +113,21 @@ export default function TecnicoModal({
                 placeholder="Usuario"
                 value={usuario}
                 onChange={(e) => setUsuario(e.target.value)}
+                disabled={!!tecnico}
               />
               <input
                 className="text-black border rounded p-2"
                 placeholder="Apellidos"
                 value={apellidos}
                 onChange={(e) => setApellidos(e.target.value)}
+                disabled={!!tecnico}
               />
               <input
                 className="text-black border rounded p-2"
                 placeholder="Nombres"
                 value={nombres}
                 onChange={(e) => setNombres(e.target.value)}
-              />
-              <input
-                type="password"
-                className="text-black border rounded p-2"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                disabled={!!tecnico}
               />
               <select
                 className="text-black border rounded p-2"
