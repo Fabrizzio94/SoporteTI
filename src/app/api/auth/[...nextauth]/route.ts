@@ -12,11 +12,12 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
+                try {
                 const pool = await getConnection();
                 const result = await pool.request()
                     .input("usuario", credentials?.username)
                     .query("SELECT * FROM tecnicos WHERE usuario = @usuario AND estado = 'A'");
-
+                //console.log("Resultado de DB:", result.recordset); 
                 const user = result.recordset[0]; // Obtenemos el primer registro
                 if (!user) return null; // si no existe el usuario retorna
 
@@ -33,6 +34,10 @@ export const authOptions: NextAuthOptions = {
                     role: user.rol,
                     cedula: user.cedula
                 };
+            } catch (error) {
+                //console.error("ERROR EN AUTORHIZE:", error)
+                return null;
+            }
             }
         })
     ],
@@ -63,7 +68,8 @@ export const authOptions: NextAuthOptions = {
     secret: process.env.NEXTAUTH_SECRET, // Agrega una frase al azar en tu archivo .env
     pages: {
         signIn: "/login",
-    }
+    }//,
+    //debug: true,
 };
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

@@ -6,9 +6,10 @@ const config: sql.config = {
   server: process.env.DB_SERVER!,
   database: process.env.DB_NAME,
   options: {
-    encrypt: false, // true si usas Azure SQL
+    encrypt: true, // true si usas Azure SQL
     trustServerCertificate: true,
   },
+  port: 1433
 };
 
 let pool: sql.ConnectionPool | null = null;
