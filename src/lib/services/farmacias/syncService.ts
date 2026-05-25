@@ -69,15 +69,7 @@ export const procesarSync = async () => {
 );
   const listaMatriz = resultMatriz.recordset;
   const tecnicosProcesados = new Set<string>();
-    console.log('Total registros:', listaMatriz.length);
-console.log('Primer registro completo:', JSON.stringify(listaMatriz[0]));
   for (const f of listaMatriz) {
-    console.log('Procesando:', {
-    OFICINA: f.OFICINA,
-    OFICINA_TYPE: typeof f.OFICINA,
-    CEDULA: f.CEDULA_TECNICO,
-    CEDULA_TYPE: typeof f.CEDULA_TECNICO
-  })
     // ── TÉCNICOS ─────────────────────────────────────────────
     try {
     if (f.CEDULA_TECNICO && !tecnicosProcesados.has(f.CEDULA_TECNICO)) {
@@ -131,7 +123,7 @@ console.log('Primer registro completo:', JSON.stringify(listaMatriz[0]));
         }
         }catch(err){
       console.error('ERROR en registro:', JSON.stringify(f));
-    console.error('Detalle error:', err);
+      console.error('Detalle error:', err);
     throw err;
     }
   }
