@@ -104,12 +104,14 @@ export const procesarImportExcel = async (
                 .input("ano_compra", anoCompra)
                 .input("descripcion", detalle)
                 .input("oficina", farmacia.oficina)
+                .input("cedula_tecnico", farmacia.cedula_tecnico ?? null)
                 .query(`
           UPDATE activo SET
             nombre_activo = @nombre_activo,
             ano_compra    = @ano_compra,
             descripcion   = @descripcion,
             oficina       = @oficina,
+            cedula_tecnico= @cedula_tecnico,
             estado        = 'A'
           WHERE codigo_activo = @codigo_activo
         `);
@@ -149,9 +151,10 @@ export const procesarImportExcel = async (
                 .input("ano_compra", anoCompra)
                 .input("descripcion", detalle)
                 .input("oficina", farmacia.oficina)
+                .input("cedula_tecnico", farmacia.cedula_tecnico ?? null)
                 .query(`
-          INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina)
-          VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina)
+          INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina, cedula_tecnico)
+          VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina, @cedula_tecnico)
         `);
             resumen.insertados++;
             activosEnBD.set(codigoActivo, {
@@ -159,7 +162,7 @@ export const procesarImportExcel = async (
                 estado: "A",
                 nombre_activo: nombreActivo,
                 oficina: farmacia.oficina,
-                cedula_tecnico: null,
+                cedula_tecnico: farmacia.cedula_tecnico ?? null,
                 ano_compra: anoCompra,
                 tipo_farmacia: farmacia.tipo_farmacia,
                 nombre_tecnico: null,

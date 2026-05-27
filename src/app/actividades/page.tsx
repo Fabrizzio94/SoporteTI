@@ -139,11 +139,7 @@ export default function ActividadesPage() {
     fetchData();
   }, [fetchData]);
 
-  //const totalPaginas = Math.ceil(actividades.length / FILAS_POR_PAGINA);
-  const actividadesPag = actividades.slice(
-    (pagina - 1) * FILAS_POR_PAGINA,
-    pagina * FILAS_POR_PAGINA,
-  );
+  const totalPaginas = Math.ceil(actividades.length / registroPorPagina);
   const filtered = actividades.filter((t) => {
     const cumpleBusqueda =
       t.codigo_activo?.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -153,10 +149,9 @@ export default function ActividadesPage() {
     return cumpleBusqueda;
   });
   // PAGINACION
+  const primerIndice = (pagina - 1) * registroPorPagina;
   const ultimoIndice = pagina * registroPorPagina;
-  const primerIndice = ultimoIndice - registroPorPagina;
-  const activosPaginados = actividadesPag.slice(primerIndice, ultimoIndice);
-  const totalPaginas = Math.ceil(actividadesPag.length / registroPorPagina);
+  const activosPaginados = actividades.slice(primerIndice, ultimoIndice);
   const abrirModal = (a: Actividad) => {
     setActividadModal(a);
     setModalOpen(true);
@@ -346,7 +341,7 @@ export default function ActividadesPage() {
                     </td>
                   </tr>
                 ))
-            ) : actividadesPag.length === 0 ? (
+            ) : activosPaginados.length === 0 ? (
               <tr>
                 <td
                   colSpan={8}
@@ -356,7 +351,7 @@ export default function ActividadesPage() {
                 </td>
               </tr>
             ) : (
-              actividadesPag.map((a) => (
+              activosPaginados.map((a) => (
                 <tr
                   key={a.id}
                   className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer transition-colors"
