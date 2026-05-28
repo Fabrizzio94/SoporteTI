@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import { RefreshCcw } from "lucide-react"; // para iconos svg refresh
 import toast from "react-hot-toast";
 export default function FarmaciasPage() {
+  // ------------------- ESTADOS -----------------------
   const [search, setSearch] = useState("");
   const [farmacias, setFarmacias] = useState<Farmacia[]>([]);
   const [farmaciasSeleccionada, setFarmaciaSeleccionada] =
@@ -26,6 +27,8 @@ export default function FarmaciasPage() {
   const user = session?.user as { role?: string; name?: string };
   // mostrar conteo por tecnico en dropdown-label
   const [mostrarConteo, setMostrarConteo] = useState(false);
+  // estados de tecnicos para filtrar por desplegable
+  const [tecnicoFiltro, setTecnicoFiltro] = useState<string | null>(null);
   const refreshData = () => {
     fetch("/api/farmacias")
       .then((res) => res.json())
@@ -91,7 +94,10 @@ export default function FarmaciasPage() {
       t.marca.toLowerCase().includes(search.toLowerCase());
     //const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
     const cumpleEstado = mostrarInactivos ? t.estado !== "A" : t.estado === "A";
-    return cumpleBusqueda && cumpleEstado;
+    const cumpleTecnico = tecnicoFiltro
+      ? t.nombre_tecnico === tecnicoFiltro
+      : true;
+    return cumpleBusqueda && cumpleEstado && cumpleTecnico;
   });
   // CONTEO DE FARMACIAS EN ETIQUETA PARA INFORMACION
   const conteoTotal = filtered.length;
@@ -143,17 +149,35 @@ export default function FarmaciasPage() {
               onClick={() => setMostrarConteo(!mostrarConteo)}
               className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-medium flex items-center gap-2"
             >
-              Total: farmacias por tecnico
+              {tecnicoFiltro
+                ? `${tecnicoFiltro}`
+                : "Total: farmacias por tecnico"}
               <span>{mostrarConteo ? "▲" : "▼"}</span>
             </button>
 
             {mostrarConteo && (
               <div className="absolute top-8 left-0 z-10 bg-white border border-slate-200 rounded-lg shadow-xl p-2 min-w-108 max-h-84 overflow-y-auto">
+                {/* opcion de limpiar filtro */}
+                {tecnicoFiltro && (
+                  <div
+                    onClick={() => {
+                      setTecnicoFiltro(null);
+                      setMostrarConteo(false);
+                    }}
+                    className="flex justify-center text-sm px-2 py-1 mb-1 hover:bg-red-50 text-red-500 rounded cursor-pointer border-b border-slate-100"
+                  >
+                    Quitar Filtro
+                  </div>
+                )}
                 {Object.entries(conteoPorTecnico)
                   .sort((a, b) => a[0].localeCompare(b[0]))
                   .map(([tecnico, count]) => (
                     <div
                       key={tecnico}
+                      onClick={() => {
+                        setTecnicoFiltro(tecnico);
+                        setMostrarConteo(false);
+                      }}
                       className="flex justify-between text-sm px-2 py-1 hover:bg-lime-300 rounded"
                     >
                       <span className="text-slate-700 group-hover:text-indigo-700 group-hover:font-medium transition-colors">
