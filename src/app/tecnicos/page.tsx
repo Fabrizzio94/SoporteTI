@@ -41,11 +41,12 @@ export default function TecnicosPage() {
       t.nombreCompleto?.toLowerCase().includes(search.toLowerCase()) ||
       t.cedula.includes(search) ||
       t.usuario.toLowerCase().includes(search.toLowerCase());
-    const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
+    //const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
+    const cumpleEstado = mostrarInactivos ? t.estado !== "A" : t.estado === "A";
     return cumpleBusqueda && cumpleEstado;
   });
   // CONTEO DE FARMACIAS EN ETIQUETA PARA INFORMACION
-  const conteoTotal = filtered.length;
+  const conteoTotal = filtered.length - 1;
   // PAGINACION TECNICOS
   const ultimoIndice = paginaActual * registroPorPagina;
   const primerIndice = ultimoIndice - registroPorPagina;
@@ -59,7 +60,7 @@ export default function TecnicosPage() {
         <TecnicoSearch onSearch={setSearch} />
         <div className="flex flex-wrap items-center gap-4">
           <span className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-medium">
-            Total: <b>{conteoTotal}</b> tecnicos{conteoTotal !== 1 ? "s" : ""}
+            Total: <b>{conteoTotal}</b> tecnico{conteoTotal !== 1 ? "s" : ""}
           </span>
         </div>
         <div className="flex items-center gap-14">

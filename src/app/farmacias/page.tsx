@@ -89,7 +89,8 @@ export default function FarmaciasPage() {
       t.oficina.includes(search) ||
       t.nombre_tecnico?.toLowerCase().includes(search.toLowerCase()) ||
       t.marca.toLowerCase().includes(search.toLowerCase());
-    const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
+    //const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
+    const cumpleEstado = mostrarInactivos ? t.estado !== "A" : t.estado === "A";
     return cumpleBusqueda && cumpleEstado;
   });
   // CONTEO DE FARMACIAS EN ETIQUETA PARA INFORMACION
