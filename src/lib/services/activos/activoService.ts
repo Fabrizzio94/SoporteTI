@@ -71,9 +71,9 @@ export const crearActivo = async (data: Pick<Activo,
       .input("ano_compra", data.ano_compra ?? null)
       .query(
         `
-        UPDATE farmacia SET
-          codigo_servidor = @codigo_activo,
-          ano_servidor = @ano_compra
+        UPDATE activo SET
+          codigo_activo = @codigo_activo,
+          ano_compra = @ano_compra
         WHERE oficina = @oficina
         `
       )
