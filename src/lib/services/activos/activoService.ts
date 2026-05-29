@@ -64,6 +64,19 @@ export const crearActivo = async (data: Pick<Activo,
           VALUES (@codigo_activo, @virtualizer, @ram, @tipo_ram, @so_servidor)
         END
       `);
+    // vincular a tabla farmacia
+    await pool.request()
+      .input("oficina", data.oficina)
+      .input("codigo_activo", data.codigo_activo)
+      .input("ano_compra", data.ano_compra ?? null)
+      .query(
+        `
+        UPDATE farmacia SET
+          codigo_servidor = @codigo_activo,
+          ano_servidor = @ano_compra
+        WHERE oficina = @oficina
+        `
+      )
   }
 
   return { ok: true };

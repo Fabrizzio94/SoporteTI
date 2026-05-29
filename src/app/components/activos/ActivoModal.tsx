@@ -61,7 +61,7 @@ export default function ActivoModal({
   const [observacionBaja, setObservacionBaja] = useState("");
   const [tab, setTab] = useState<"info" | "servidor" | "baja">("info");
 
-  const isServidor = nombreActivo === "CPU";
+  const isServidor = nombreActivo.trim() === "CPU";
   const isEditing = !!activo;
 
   useEffect(() => {
@@ -317,6 +317,7 @@ export default function ActivoModal({
                       setVirtualizer(e.target.value);
                     }}
                   >
+                    <option value="">— Sin especificar —</option>
                     {listadoVirtualizer.map((n) => (
                       <option key={n} value={n}>
                         {n}
@@ -362,6 +363,7 @@ export default function ActivoModal({
                       setTipoRam(e.target.value);
                     }}
                   >
+                    <option value="">— Sin especificar —</option>
                     {listadoTipoRam.map((n) => (
                       <option key={n} value={n}>
                         {n}
@@ -380,6 +382,7 @@ export default function ActivoModal({
                       setSoVer(e.target.value);
                     }}
                   >
+                    <option value="">— Sin especificar —</option>
                     {listadoSoSrv.map((n) => (
                       <option key={n} value={n}>
                         {n}

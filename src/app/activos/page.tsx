@@ -424,7 +424,9 @@ export default function ActivosPage() {
       <ActivoModal
         open={modalOpen}
         activo={activoSeleccionado}
-        farmacias={farmacias}
+        farmacias={[...farmacias].sort((a, b) =>
+          a.nombre?.localeCompare(b.nombre),
+        )}
         onClose={() => setModalOpen(false)}
         onSaved={() => {
           setModalOpen(false);

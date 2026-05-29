@@ -65,7 +65,6 @@ export default function FarmaciaModal({
   useEffect(() => {
     // fetch para traer consulta de tecnicos
     setLoading(true);
-    console.log("primer hook: " + loading);
     const start = Date.now();
     if (open) {
       fetch("/api/tecnicos")
@@ -99,12 +98,15 @@ export default function FarmaciaModal({
       setTipoRack(farmacia.tipo_rack ?? "");
       setEstado(farmacia.estado ?? "");
       // En useEffect agrega:
-      setSoServidor(farmacia.so_servidor ?? "");
+      setSoServidor(
+        listadoSoSrv.includes(farmacia.so_servidor ?? "")
+          ? (farmacia.so_servidor ?? "")
+          : "",
+      );
       setVirtualizer(farmacia.virtualizer ?? "");
       setRam(farmacia.ram ?? "");
       setTipoRamSrv(farmacia.tipo_ram ?? "");
       setTimeout(() => setLoading(false), 400);
-      console.log("salida hook: " + loading);
     } else {
       setOficina("");
       setNombre("");
@@ -135,6 +137,7 @@ export default function FarmaciaModal({
           oficina,
           tecnologiaTerminales,
           soTerminales,
+          soServidor,
           numPuntosVenta,
           tipoRack,
           estado,
@@ -417,6 +420,7 @@ export default function FarmaciaModal({
                                     setSoServidor(e.target.value)
                                   }
                                 >
+                                  <option value="">--- Sin asignar ---</option>
                                   {listadoSoSrv.map((item) => (
                                     <option key={item} value={item}>
                                       {item}
@@ -435,6 +439,7 @@ export default function FarmaciaModal({
                                     setVirtualizer(e.target.value)
                                   }
                                 >
+                                  <option value="">— Sin especificar —</option>
                                   {listadoVirtualizer.map((item) => (
                                     <option key={item} value={item}>
                                       {item}
@@ -490,6 +495,7 @@ export default function FarmaciaModal({
                                     setTipoRamSrv(e.target.value)
                                   }
                                 >
+                                  <option value="">— Sin especificar —</option>
                                   {listadoTipoRam.map((item) => (
                                     <option key={item} value={item}>
                                       {item}

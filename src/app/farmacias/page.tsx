@@ -86,19 +86,28 @@ export default function FarmaciasPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  const filtered = farmacias.filter((t) => {
-    const cumpleBusqueda =
-      t.nombre?.toLowerCase().includes(search.toLowerCase()) ||
-      t.oficina.includes(search) ||
-      t.nombre_tecnico?.toLowerCase().includes(search.toLowerCase()) ||
-      t.marca.toLowerCase().includes(search.toLowerCase());
-    //const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
-    const cumpleEstado = mostrarInactivos ? t.estado !== "A" : t.estado === "A";
-    const cumpleTecnico = tecnicoFiltro
-      ? t.nombre_tecnico === tecnicoFiltro
-      : true;
-    return cumpleBusqueda && cumpleEstado && cumpleTecnico;
-  });
+  const filtered = farmacias
+    .filter((t) => {
+      const cumpleBusqueda =
+        t.nombre?.toLowerCase().includes(search.toLowerCase()) ||
+        t.oficina.includes(search) ||
+        t.nombre_tecnico?.toLowerCase().includes(search.toLowerCase()) ||
+        t.marca.toLowerCase().includes(search.toLowerCase());
+      //const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
+      const cumpleEstado = mostrarInactivos
+        ? t.estado !== "A"
+        : t.estado === "A";
+      const cumpleTecnico = tecnicoFiltro
+        ? t.nombre_tecnico === tecnicoFiltro
+        : true;
+      return cumpleBusqueda && cumpleEstado && cumpleTecnico;
+    })
+    .sort((a, b) => {
+      if (tecnicoFiltro) {
+        return (a.nombre ?? "").localeCompare(b.nombre ?? "");
+      }
+      return (a.nombre_tecnico ?? "").localeCompare(b.nombre_tecnico ?? "");
+    });
   // CONTEO DE FARMACIAS EN ETIQUETA PARA INFORMACION
   const conteoTotal = filtered.length;
   const conteoPorTecnico = filtered.reduce(
