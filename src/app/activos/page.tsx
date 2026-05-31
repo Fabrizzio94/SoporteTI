@@ -25,6 +25,7 @@ import { Usuario } from "@/app/types/tecnico";
 import ActivosTable from "../components/activos/ActivosTable";
 import ActivoModal from "../components/activos/ActivoModal";
 import ActivosSearch from "../components/activos/ActivosSearch";
+import { useDebounce } from "../hooks/useDebounce";
 
 const TIPO_CHIPS = [
   { nombre: "CPU", label: "CPU (Servidor)", icon: Server },
@@ -84,6 +85,7 @@ export default function ActivosPage() {
     { oficina: string; nombre: string }[]
   >([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [filtroFarmacia, setFiltroFarmacia] = useState("");
   const [filtroTecnico, setFiltroTecnico] = useState("");
   const [activoSeleccionado, setActivoSeleccionado] = useState<Activo | null>(
@@ -110,9 +112,11 @@ export default function ActivosPage() {
     ];
   }, [activos, filtroTecnico]);
   const refreshData = () => {
+    // setShowUpload(true);
     fetch("/api/activos")
       .then((r) => r.json())
       .then((d) => setActivos(Array.isArray(d) ? d : []));
+    //.finally(() => setShowUpload(false));
   };
 
   useEffect(() => {
@@ -143,10 +147,12 @@ export default function ActivosPage() {
   // Filtrado
   const filtered = activos.filter((a) => {
     const cumpleBusqueda =
-      a.codigo_activo.includes(search) ||
-      a.nombre_activo.toLowerCase().includes(search.toLowerCase()) ||
-      a.nombre_farmacia?.toLowerCase().includes(search.toLowerCase()) ||
-      a.descripcion?.toLowerCase().includes(search.toLowerCase());
+      a.codigo_activo.includes(debouncedSearch) ||
+      a.nombre_activo.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      a.nombre_farmacia
+        ?.toLowerCase()
+        .includes(debouncedSearch.toLowerCase()) ||
+      a.descripcion?.toLowerCase().includes(debouncedSearch.toLowerCase());
     const cumpleFarmacia = filtroFarmacia
       ? a.nombre_farmacia === filtroFarmacia
       : true;

@@ -7,9 +7,11 @@ import FarmaciasTable from "../components/farmacias/FarmaciasTable";
 import { useSession } from "next-auth/react";
 import { RefreshCcw } from "lucide-react"; // para iconos svg refresh
 import toast from "react-hot-toast";
+import { useDebounce } from "../hooks/useDebounce";
 export default function FarmaciasPage() {
   // ------------------- ESTADOS -----------------------
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [farmacias, setFarmacias] = useState<Farmacia[]>([]);
   const [farmaciasSeleccionada, setFarmaciaSeleccionada] =
     useState<Partial<Farmacia> | null>(null);
@@ -89,10 +91,12 @@ export default function FarmaciasPage() {
   const filtered = farmacias
     .filter((t) => {
       const cumpleBusqueda =
-        t.nombre?.toLowerCase().includes(search.toLowerCase()) ||
-        t.oficina.includes(search) ||
-        t.nombre_tecnico?.toLowerCase().includes(search.toLowerCase()) ||
-        t.marca.toLowerCase().includes(search.toLowerCase());
+        t.nombre?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        t.oficina.includes(debouncedSearch) ||
+        t.nombre_tecnico
+          ?.toLowerCase()
+          .includes(debouncedSearch.toLowerCase()) ||
+        t.marca.toLowerCase().includes(debouncedSearch.toLowerCase());
       //const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
       const cumpleEstado = mostrarInactivos
         ? t.estado !== "A"

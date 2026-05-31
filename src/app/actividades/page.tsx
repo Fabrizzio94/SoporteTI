@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { Usuario } from "@/app/types/tecnico";
 import { Actividad } from "@/app/types/actividad";
 import ActividadModal from "@/app/components/actividades/ActividadModal";
+import { useDebounce } from "../hooks/useDebounce";
 
 const FILAS_POR_PAGINA = 10;
 
@@ -71,6 +72,7 @@ export default function ActividadesPage() {
 
   // Filtros
   const [busqueda, setBusqueda] = useState("");
+  const debouncedSearch = useDebounce(busqueda, 300);
   const [farmacia, setFarmacia] = useState("");
   const [tecnico, setTecnico] = useState("");
   const [estado, setEstado] = useState("");
@@ -107,7 +109,7 @@ export default function ActividadesPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (busqueda) params.set("busqueda", busqueda);
+    if (debouncedSearch) params.set("busqueda", debouncedSearch);
     if (farmacia) params.set("farmacia", farmacia);
     if (tecnico) params.set("tecnico", tecnico);
     if (estado) params.set("estado", estado);
@@ -133,21 +135,13 @@ export default function ActividadesPage() {
     } finally {
       setLoading(false);
     }
-  }, [busqueda, farmacia, tecnico, estado, desde, hasta]);
+  }, [debouncedSearch, farmacia, tecnico, estado, desde, hasta]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   const totalPaginas = Math.ceil(actividades.length / registroPorPagina);
-  const filtered = actividades.filter((t) => {
-    const cumpleBusqueda =
-      t.codigo_activo?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      t.oficina.includes(busqueda) ||
-      t.nombre_tecnico?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      t.nombre_activo.toLowerCase().includes(busqueda.toLowerCase());
-    return cumpleBusqueda;
-  });
   // PAGINACION
   const primerIndice = (pagina - 1) * registroPorPagina;
   const ultimoIndice = pagina * registroPorPagina;
