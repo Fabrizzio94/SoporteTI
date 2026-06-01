@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import {
   RefreshCcw,
@@ -79,13 +79,13 @@ const TIPO_CHIPS = [
 export default function ActivosPage() {
   const { data: session } = useSession();
   const user = session?.user as Usuario;
-
   const [activos, setActivos] = useState<Activo[]>([]);
   const [farmacias, setFarmacias] = useState<
     { oficina: string; nombre: string }[]
   >([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
+  const [total, setTotal] = useState(0);
   const [filtroFarmacia, setFiltroFarmacia] = useState("");
   const [filtroTecnico, setFiltroTecnico] = useState("");
   const [activoSeleccionado, setActivoSeleccionado] = useState<Activo | null>(
@@ -99,80 +99,73 @@ export default function ActivosPage() {
   const [habilitarBoton, setHabilitarBoton] = useState(false);
   // FILTRO DE MARCA
   const [filtroMarca, setFiltroMarca] = useState("");
-  const marcasDisponibles = useMemo(() => {
-    const base = filtroTecnico
-      ? activos.filter((a) => a.nombre_tecnico === filtroTecnico)
-      : activos;
-    return [
-      ...new Set(
-        base
-          .map((a) => a.marca_farmacia)
-          .filter((m): m is string => m !== null && m !== undefined),
-      ),
-    ];
-  }, [activos, filtroTecnico]);
-  const refreshData = () => {
-    // setShowUpload(true);
-    fetch("/api/activos")
+  const [marcasDisponibles, setMarcasDisponibles] = useState<string[]>([]);
+  const [tecnicosUnicos, setTecnicosUnicos] = useState<string[]>([]);
+  const [farmaciasDisponibles, setFarmaciasDisponibles] = useState<string[]>(
+    [],
+  );
+  const [conteoTipos, setConteoTipos] = useState<
+    { nombre_activo: string; total: number }[]
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const limit = registroPorPagina;
+  useEffect(() => {
+    fetch("/api/activos/filtros")
       .then((r) => r.json())
-      .then((d) => setActivos(Array.isArray(d) ? d : []));
-    //.finally(() => setShowUpload(false));
-  };
+      .then((d) => {
+        setMarcasDisponibles(d.marcas ?? []);
+        setTecnicosUnicos(d.tecnicos ?? []);
+        setFarmaciasDisponibles(d.farmacias ?? []);
+        setConteoTipos(d.conteoTipos ?? []);
+      });
+  }, []);
+  const refreshData = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set("busqueda", debouncedSearch);
+    if (filtroFarmacia) params.set("farmacia", filtroFarmacia);
+    if (filtroTecnico) params.set("tecnico", filtroTecnico);
+    if (filtroMarca) params.set("marca", filtroMarca);
+    params.set("page", paginaActual.toString());
+    params.set("limit", registroPorPagina.toString());
 
+    try {
+      const r = await fetch(`/api/activos?${params.toString()}`);
+      const d = await r.json();
+      setActivos(d.data ?? []);
+      setTotal(d.total ?? 0);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    debouncedSearch,
+    filtroFarmacia,
+    filtroTecnico,
+    filtroMarca,
+    paginaActual,
+    registroPorPagina,
+  ]);
   useEffect(() => {
     refreshData();
-    fetch("/api/farmacias")
-      .then((r) => r.json())
-      .then((d) =>
-        setFarmacias(
-          Array.isArray(d)
-            ? d.map((f: any) => ({ oficina: f.oficina, nombre: f.nombre }))
-            : [],
-        ),
-      );
-  }, []);
+  }, [refreshData]);
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [search, filtroFarmacia, filtroTecnico, filtroMarca]);
-  // Técnicos únicos para filtro coordinador
-  const tecnicosUnicos = [
-    ...new Set(
-      activos
-        .map((a) => a.nombre_tecnico)
-        .filter((t): t is string => t != null && t !== undefined),
-    ),
-  ];
-
-  // Filtrado
-  const filtered = activos.filter((a) => {
-    const cumpleBusqueda =
-      a.codigo_activo.includes(debouncedSearch) ||
-      a.nombre_activo.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      a.nombre_farmacia
-        ?.toLowerCase()
-        .includes(debouncedSearch.toLowerCase()) ||
-      a.descripcion?.toLowerCase().includes(debouncedSearch.toLowerCase());
-    const cumpleFarmacia = filtroFarmacia
-      ? a.nombre_farmacia === filtroFarmacia
-      : true;
-    const cumpleTecnico = filtroTecnico
-      ? a.nombre_tecnico === filtroTecnico
-      : true;
-    const cumpleMarca = filtroMarca ? a.marca_farmacia === filtroMarca : true;
-    return cumpleBusqueda && cumpleFarmacia && cumpleTecnico && cumpleMarca;
-  });
+  }, [
+    debouncedSearch,
+    filtroFarmacia,
+    filtroTecnico,
+    filtroMarca,
+    registroPorPagina,
+  ]);
   // Conteo por tipo para ccards mejorado para solo filtrar los disponibles segun lo que se filtre en filtered que maneja
   // filtro global por codigo, nombre, nombre farmacia, marca.
   const conteoPorTipo = TIPO_CHIPS.map((t) => ({
     ...t,
-    count: filtered.filter((a) => a.nombre_activo === t.nombre).length,
+    count: conteoTipos.find((a) => a.nombre_activo === t.nombre)?.total ?? 0,
   }));
   // PAGINACION
-  const ultimoIndice = paginaActual * registroPorPagina;
-  const primerIndice = ultimoIndice - registroPorPagina;
-  const activosPaginados = filtered.slice(primerIndice, ultimoIndice);
-  const totalPaginas = Math.ceil(filtered.length / registroPorPagina);
+  const totalPaginas = Math.ceil(total / limit);
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -241,13 +234,11 @@ export default function ActivosPage() {
             onChange={(e) => setFiltroFarmacia(e.target.value)}
           >
             <option value="">Farmacia: Todas</option>
-            {[...new Set(activos.map((a) => a.nombre_farmacia))]
-              .sort()
-              .map((f) => (
-                <option key={f} value={f}>
-                  {f}
-                </option>
-              ))}
+            {farmaciasDisponibles.map((f) => (
+              <option key={f} value={f}>
+                {f}
+              </option>
+            ))}
           </select>
           {user?.role === "COORDINADOR" && (
             <select
@@ -360,13 +351,21 @@ export default function ActivosPage() {
       )}
 
       {/* TABLA */}
-      <ActivosTable
-        activos={activosPaginados}
-        onEdit={(a) => {
-          setActivoSeleccionado(a);
-          setModalOpen(true);
-        }}
-      />
+      {loading ? (
+        <div className="space-y-2 mt-4">
+          {[...Array(registroPorPagina)].map((_, i) => (
+            <div key={i} className="h-10 bg-slate-100 rounded animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <ActivosTable
+          activos={activos}
+          onEdit={(a) => {
+            setActivoSeleccionado(a);
+            setModalOpen(true);
+          }}
+        />
+      )}
 
       {/* PAGINACIÓN */}
       <div className="mt-6 flex items-center justify-between">

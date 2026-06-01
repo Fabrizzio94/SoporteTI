@@ -1,6 +1,6 @@
 import { getConnection } from "@/lib/db";
 import { Activo } from "@/app/types/activo";
-export const obtenerActivos = async (rol: string, cedula: string) => {
+/* export const obtenerActivos = async (rol: string, cedula: string) => {
   const pool = await getConnection();
   const whereExtra = rol === "TECNICO" ? `AND t.cedula = '${cedula}'` : "";
 
@@ -29,8 +29,101 @@ export const obtenerActivos = async (rol: string, cedula: string) => {
   `);
 
   return result.recordset;
-};
+}; */
+export const obtenerActivos = async (rol: string, cedula: string,
+  filtros: {
+    busqueda?: string;
+    farmacia?: string;
+    tecnico?: string;
+    marca?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+  const pool = await getConnection();
+  const limit = filtros.limit ?? 50;
+  const offset = ((filtros.page ?? 1) - 1) * limit;
 
+  const conditions: string[] = ["a.estado = 'A'"];
+  const request = pool.request();
+  const requestCount = pool.request();
+
+  if (rol === "TECNICO") {
+    conditions.push("t.cedula = @cedula");
+    request.input("cedula", cedula);
+    requestCount.input("cedula", cedula);
+  } else if (filtros.tecnico) {
+    conditions.push("t.cedula = @tecnico OR (t.apellidos + ' ' + t.nombres) = @tecnico");
+    request.input("tecnico", filtros.tecnico);
+    requestCount.input("tecnico", filtros.tecnico);
+  }
+  if (filtros.busqueda) {
+    conditions.push(`(
+      a.codigo_activo LIKE @busqueda OR
+      a.nombre_activo LIKE @busqueda OR
+      f.nombre        LIKE @busqueda OR
+      a.descripcion   LIKE @busqueda
+      )`);
+    request.input("busqueda", `%${filtros.busqueda}%`);
+    requestCount.input("busqueda", `%${filtros.busqueda}%`);
+  }
+  if (filtros.farmacia) {
+    conditions.push("f.nombre = @farmacia");
+    request.input("farmacia", filtros.farmacia);
+    requestCount.input("farmacia", filtros.farmacia);
+  }
+
+  if (filtros.marca) {
+    conditions.push("f.marca = @marca");
+    request.input("marca", filtros.marca);
+    requestCount.input("marca", filtros.marca);
+  }
+
+  const whereClause = "WHERE " + conditions.join(" AND ");
+
+  request
+    .input("limit", limit)
+    .input("offset", offset);
+
+  const [result, countResult] = await Promise.all([
+    request.query(`
+      SELECT
+        a.codigo_activo,
+        a.nombre_activo,
+        a.ano_compra,
+        a.descripcion,
+        a.estado,
+        a.oficina,
+        f.nombre           AS nombre_farmacia,
+        f.marca            AS marca_farmacia,
+        t.apellidos + ' ' + t.nombres AS nombre_tecnico,
+        f.cedula_tecnico,
+        s.virtualizer,
+        s.ram,
+        s.tipo_ram,
+        s.so_servidor
+      FROM activo a
+      INNER JOIN farmacia f ON f.oficina = a.oficina
+      LEFT JOIN tecnicos t  ON t.cedula  = f.cedula_tecnico
+      LEFT JOIN servidor s  ON s.codigo_activo = a.codigo_activo
+      ${whereClause}
+      ORDER BY f.nombre, a.nombre_activo
+      OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
+    `),
+    requestCount.query(`
+      SELECT COUNT(*) AS total
+      FROM activo a
+      INNER JOIN farmacia f ON f.oficina = a.oficina
+      LEFT JOIN tecnicos t  ON t.cedula  = f.cedula_tecnico
+      ${whereClause}
+    `)
+  ]);
+
+  return {
+    data: result.recordset,
+    total: countResult.recordset[0].total,
+  };
+
+};
 export const crearActivo = async (data: Pick<Activo,
   "codigo_activo" | "nombre_activo" | "ano_compra" | "descripcion"
   | "oficina" | "virtualizer" | "ram" | "tipo_ram" | "so_servidor">) => {

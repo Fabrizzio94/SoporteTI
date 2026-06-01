@@ -12,8 +12,23 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
         const user = session.user as Usuario;
-        const activos = await obtenerActivos(user.role, user.cedula);
-        return NextResponse.json(activos);
+        //const activos = await obtenerActivos(user.role, user.cedula);
+        const url = new URL(req.url);
+        const page = parseInt(url.searchParams.get("page") ?? "1");
+        const limit = parseInt(url.searchParams.get("limit") ?? "50");
+        const busqueda = url.searchParams.get("busqueda") ?? "";
+        const farmacia = url.searchParams.get("farmacia") ?? "";
+        const tecnico = url.searchParams.get("tecnico") ?? "";
+        const marca = url.searchParams.get("marca") ?? "";
+
+        const resultado = await obtenerActivos(
+            user.role,
+            user.cedula,
+            { busqueda, farmacia, tecnico, marca, page, limit }
+        );
+
+        return NextResponse.json(resultado);
+        //return NextResponse.json(activos);
 
     } catch (error) {
         console.error("Error GET activos:", error);
