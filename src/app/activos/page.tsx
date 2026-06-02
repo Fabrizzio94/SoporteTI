@@ -118,6 +118,15 @@ export default function ActivosPage() {
         setFarmaciasDisponibles(d.farmacias ?? []);
         setConteoTipos(d.conteoTipos ?? []);
       });
+    fetch("/api/farmacias")
+      .then((r) => r.json())
+      .then((d) =>
+        setFarmacias(
+          Array.isArray(d)
+            ? d.map((f: any) => ({ oficina: f.oficina, nombre: f.nombre }))
+            : [],
+        ),
+      );
   }, []);
   const refreshData = useCallback(async () => {
     setLoading(true);
