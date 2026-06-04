@@ -27,7 +27,8 @@ export const ACTIVOS_PERMITIDOS = new Set([
 
 export const COLUMNAS_REQUERIDAS = [
     "Nombre Activo", "Activo fijo",
-    "Centro Costo Origen", "Fecha de Alta", "Detalle"
+    "Centro Costo Origen", "Fecha de Alta", "Detalle",
+    "Nombre Custodio"
 ];
 
 export const extraerCodigoAnterior = (detalle: string): string | null => {

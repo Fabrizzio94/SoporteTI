@@ -15,4 +15,5 @@ export type Activo = {
     tipo_ram?: string | null;
     so_servidor?: string | null;
     es_principal?: boolean | null;
+    nombre_custodio?: string | null;
 };
