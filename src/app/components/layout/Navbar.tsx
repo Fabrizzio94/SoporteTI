@@ -40,9 +40,9 @@ export default function Navbar() {
         </div>
 
         <nav className="flex gap-4 text-sm">
-          {/* <Link href="/dashboard" className="hover:text-indigo-300">
+          <Link href="/dashboard" className="hover:text-indigo-300">
             Dashboard
-          </Link> */}
+          </Link>
 
           {/* RESTRICCIÓN: Solo el COORDINADOR ve la pestaña Técnicos */}
           {(session.user as Usuario).role === "COORDINADOR" && (
