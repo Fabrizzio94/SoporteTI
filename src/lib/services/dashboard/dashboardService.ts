@@ -18,7 +18,16 @@ export const obtenerDatosDashboard = async () => {
       SELECT COALESCE(tecnologia_terminales, 'Sin datos') AS nombre, COUNT(*) AS total
       FROM farmacia WHERE estado = 'A'
       GROUP BY tecnologia_terminales
+      ORDER BY total DESC
     `),
+    /* ORDER BY
+  CASE tecnologia_terminales
+    WHEN 'AMD-2' THEN 1
+    WHEN 'AMD-3' THEN 2
+    WHEN 'AMD-4' THEN 3
+    WHEN 'AMD-5' THEN 4
+    ELSE 99
+  END */
     pool.request().query(`
       SELECT COALESCE(ssoo_terminales, 'Sin datos') AS nombre, COUNT(*) AS total
       FROM farmacia WHERE estado = 'A'
@@ -48,9 +57,11 @@ export const obtenerDatosDashboard = async () => {
 
   const totalFarmacias = tipoFarmacia.recordset.reduce((acc: number, r: any) => acc + r.total, 0);
   const totalServidores = soServidor.recordset.reduce((acc: number, r: any) => acc + r.total, 0);
+  const propias = tipoFarmacia.recordset.find((r: any) => r.nombre === "Propia")?.total ?? 0;
+  const franquicias = tipoFarmacia.recordset.find((r: any) => r.nombre == "Franquicia")?.total ?? 0;
   //console.log("dashboard data:", JSON.stringify(num_puntos_venta.recordset));
   return {
-    resumen: { totalFarmacias, totalServidores },
+    resumen: { totalFarmacias, totalServidores, propias, franquicias },
     tipoFarmacia: tipoFarmacia.recordset,
     marcas: marcas.recordset,
     tecnologia: tecnologia.recordset,

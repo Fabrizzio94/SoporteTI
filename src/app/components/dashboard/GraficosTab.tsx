@@ -147,6 +147,8 @@ export default function GraficosTab({ data }: Props) {
           <ChartCard
             title="Tecnología Terminales"
             data={data.tecnologia}
+            inclinado
+            mostrarValores
             color={COLORS.accent}
           />
           <ChartCard

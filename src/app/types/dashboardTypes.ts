@@ -2,7 +2,12 @@
 export type ChartItem = { nombre: string; total: number };
 
 export type DashboardData = {
-    resumen: { totalFarmacias: number; totalServidores: number };
+    resumen: {
+        totalFarmacias: number;
+        totalServidores: number;
+        propias: number;
+        franquicias: number;
+    };
     tipoFarmacia: ChartItem[];
     marcas: ChartItem[];
     tecnologia: ChartItem[];

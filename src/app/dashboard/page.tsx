@@ -5,7 +5,7 @@ import GraficosTab from "@/app/components/dashboard/GraficosTab";
 import TablasTab from "@/app/components/dashboard/TablasTab";
 import { DashboardData } from "@/app/types/dashboardTypes";
 
-const StatCard = ({ label, value }: { label: string; value: number }) => (
+const StatCard = ({ label, value = 0 }: { label: string; value: number }) => (
   <div className="bg-white rounded-xl border border-slate-200 p-5">
     <p className="text-xs font-medium text-slate-400 uppercase tracking-wide mb-1">
       {label}
@@ -65,12 +65,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Tarjetas resumen — siempre visibles */}
-      <div className="grid grid-cols-2 gap-4 max-w-sm">
+      <div className="grid grid-cols-4 gap-4">
         <StatCard label="Total Farmacias" value={data.resumen.totalFarmacias} />
         <StatCard
           label="Total Servidores"
           value={data.resumen.totalServidores}
         />
+        <StatCard label="Propias" value={data.resumen.propias} />
+        <StatCard label="Franquicias" value={data.resumen.franquicias} />
       </div>
 
       {/* Submenú de pestañas */}
