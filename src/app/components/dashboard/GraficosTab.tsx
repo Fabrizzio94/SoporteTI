@@ -155,6 +155,7 @@ export default function GraficosTab({ data }: Props) {
             title="SO Terminales"
             data={data.soTerminales}
             color={COLORS.warning}
+            mostrarValores
           />
           <ChartCard
             title="Puntos de Venta por Tecnología"
@@ -177,16 +178,19 @@ export default function GraficosTab({ data }: Props) {
             title="Sistema Operativo"
             data={data.soServidor}
             color={COLORS.primary}
+            mostrarValores
           />
           <ChartCard
             title="RAM (GB)"
             data={data.ram}
             color={COLORS.secondary}
+            mostrarValores
           />
           <ChartCard
             title="Virtualizador"
             data={data.virtualizador}
             color={COLORS.accent}
+            mostrarValores
           />
         </div>
       </div>

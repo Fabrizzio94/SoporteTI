@@ -1,9 +1,9 @@
 import { getConnection } from "@/lib/db";
 
 
-export const obtenerDatosTablaDashboard = async () => {
+export const obtenerDatosTablaDashboard = async (rol: string, cedula: string) => {
   const pool = await getConnection();
-
+  const whereExtra = rol === "TECNICO" ? `AND f.cedula_tecnico ='${cedula}'` : "";
   const query = (campo: string, tabla: string = "farmacia", join: string = "") => `
     SELECT 
       COALESCE(${campo}, 'Sin datos') AS nombre,
@@ -12,7 +12,7 @@ export const obtenerDatosTablaDashboard = async () => {
       SUM(CASE WHEN f.tipo_farmacia IS NULL         THEN 1 ELSE 0 END) AS sin_tipo,
       COUNT(*) AS total
     FROM ${tabla} f ${join}
-    WHERE f.estado = 'A'
+    WHERE f.estado = 'A' ${whereExtra}
     GROUP BY ${campo}
     ORDER BY total DESC
   `;
@@ -31,6 +31,7 @@ export const obtenerDatosTablaDashboard = async () => {
       FROM servidor s
       INNER JOIN activo  a ON a.codigo_activo = s.codigo_activo
       INNER JOIN farmacia f ON f.oficina      = a.oficina
+      WHERE 1=1 ${whereExtra}
       GROUP BY s.so_servidor
       ORDER BY total DESC
     `),
@@ -44,6 +45,7 @@ export const obtenerDatosTablaDashboard = async () => {
       FROM servidor s
       INNER JOIN activo  a ON a.codigo_activo = s.codigo_activo
       INNER JOIN farmacia f ON f.oficina      = a.oficina
+      WHERE 1=1 ${whereExtra}
       GROUP BY s.ram
       ORDER BY total DESC
     `),
@@ -55,8 +57,8 @@ export const obtenerDatosTablaDashboard = async () => {
         SUM(CASE WHEN tipo_farmacia = 'Franquicia' THEN COALESCE(num_puntos_venta, 0) ELSE 0 END) AS franquicias,
         SUM(CASE WHEN tipo_farmacia IS NULL         THEN COALESCE(num_puntos_venta, 0) ELSE 0 END) AS sin_tipo,
         SUM(COALESCE(num_puntos_venta, 0)) AS total
-      FROM farmacia
-      WHERE estado = 'A'
+      FROM farmacia f
+      WHERE f.estado = 'A' ${whereExtra}
       GROUP BY tecnologia_terminales
       ORDER BY total DESC
     `),
@@ -72,6 +74,7 @@ export const obtenerDatosTablaDashboard = async () => {
       FROM servidor s
       INNER JOIN activo  a ON a.codigo_activo = s.codigo_activo
       INNER JOIN farmacia f ON f.oficina      = a.oficina
+      WHERE 1=1 ${whereExtra}
       GROUP BY a.ano_compra
       ORDER BY a.ano_compra ASC
     `),

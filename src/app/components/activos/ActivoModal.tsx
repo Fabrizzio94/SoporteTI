@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Activo } from "@/app/types/activo";
 import toast from "react-hot-toast";
+import { useDebounce } from "@/app/hooks/useDebounce";
 
 type Props = {
   open: boolean;
@@ -63,7 +64,10 @@ export default function ActivoModal({
 
   const isServidor = nombreActivo.trim() === "CPU";
   const isEditing = !!activo;
-
+  // validacion de duplicidad debounce
+  const [codigoExiste, setCodigoExiste] = useState(false);
+  const [validandoCodigo, setValidandoCodigo] = useState(false);
+  const debouncedCodigo = useDebounce(codigoActivo, 500);
   useEffect(() => {
     if (activo) {
       setCodigoActivo(activo.codigo_activo ?? "");
@@ -91,7 +95,17 @@ export default function ActivoModal({
     setObservacionBaja("");
     setTab("info");
   }, [activo, open]);
-
+  useEffect(() => {
+    if (isEditing || debouncedCodigo.length < 10) {
+      setCodigoExiste(false);
+      return;
+    }
+    setValidandoCodigo(true);
+    fetch(`/api/activos?codigo=${debouncedCodigo}`)
+      .then((r) => r.json())
+      .then((d) => setCodigoExiste(d.existe))
+      .finally(() => setValidandoCodigo(false));
+  }, [debouncedCodigo, isEditing]);
   const handleSubmit = async () => {
     if (!codigoActivo || !nombreActivo || !oficina) {
       toast.error("Completa los campos obligatorios");
@@ -117,13 +131,16 @@ export default function ActivoModal({
           }),
         }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Error al guardar");
+      }
       toast.success(isEditing ? "Actualizado correctamente" : "Activo creado", {
         id: loading,
       });
       onSaved();
-    } catch {
-      toast.error("Error al guardar", { id: loading });
+    } catch (error: any) {
+      toast.error(error.message ?? "Error al grabar", { id: loading });
     }
   };
 
@@ -211,12 +228,27 @@ export default function ActivoModal({
                     Código SAP <span className="text-red-500">*</span>
                   </label>
                   <input
-                    className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400 disabled:bg-slate-50"
+                    className={`w-full border rounded-md px-3 py-2 text-sm outline-none disabled:bg-slate-50
+                        ${
+                          codigoExiste
+                            ? "border-red-400 focus:border-red-400"
+                            : "border-slate-200 focus:border-indigo-400"
+                        }`}
                     value={codigoActivo}
                     onChange={(e) => setCodigoActivo(e.target.value)}
                     disabled={isEditing}
                     placeholder="1400049240"
                   />
+                  {validandoCodigo && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      Verificando...
+                    </p>
+                  )}
+                  {codigoExiste && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Este código ya existe en el sistema.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 font-medium block mb-1">
@@ -466,7 +498,9 @@ export default function ActivoModal({
           ) : (
             <button
               onClick={handleSubmit}
-              className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium"
+              disabled={codigoExiste || validandoCodigo}
+              className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium
+              disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Guardar
             </button>

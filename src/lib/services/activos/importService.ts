@@ -170,7 +170,8 @@ export const procesarImportExcel = async (
             nombre_custodio=@nombre_custodio,
             estado        = 'A'
           WHERE codigo_activo = @codigo_activo
-        `);
+        `); // pendiente de borrar ano_compra para que no actualice
+            // cuando carga nuevo archivo y mantener año de equipos
 
             // Estaba inactivo y vuelve a aparecer en Excel
             if (activoEnBD.estado === "I") {

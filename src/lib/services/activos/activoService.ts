@@ -135,13 +135,21 @@ export const crearActivo = async (data: Pick<Activo,
     .input("ano_compra", data.ano_compra ?? null)
     .input("descripcion", data.descripcion ?? null)
     .input("oficina", data.oficina)
+    /* .query(`
+      MERGE INTO activo AS target
+      USING (SELECT @codigo_activo AS codigo_activo) AS source
+        ON target.codigo_activo = source.codigo_activo
+      WHEN NOT MATCHED THEN
+        INSERT (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina)
+        VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina);
+      `) */
     .query(`
-      IF NOT EXISTS (SELECT 1 FROM activo WHERE codigo_activo = @codigo_activo)
-      BEGIN
-        INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina)
-        VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina)
-      END
-    `);
+    IF NOT EXISTS (SELECT 1 FROM activo WHERE codigo_activo = @codigo_activo)
+    BEGIN
+      INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina)
+      VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina)
+    END
+  `);
 
   if (data.nombre_activo === "CPU") {
     await pool.request()
@@ -151,25 +159,24 @@ export const crearActivo = async (data: Pick<Activo,
       .input("tipo_ram", data.tipo_ram ?? null)
       .input("so_servidor", data.so_servidor ?? null)
       .query(`
-        IF NOT EXISTS (SELECT 1 FROM servidor WHERE codigo_activo = @codigo_activo)
-        BEGIN
-          INSERT INTO servidor (codigo_activo, virtualizer, ram, tipo_ram, so_servidor)
-          VALUES (@codigo_activo, @virtualizer, @ram, @tipo_ram, @so_servidor)
-        END
-      `);
+      IF NOT EXISTS (SELECT 1 FROM servidor WHERE codigo_activo = @codigo_activo)
+      BEGIN
+        INSERT INTO servidor (codigo_activo, virtualizer, ram, tipo_ram, so_servidor)
+        VALUES (@codigo_activo, @virtualizer, @ram, @tipo_ram, @so_servidor)
+      END
+    `);
     // vincular a tabla farmacia
-    await pool.request()
+    /* await pool.request()
       .input("oficina", data.oficina)
       .input("codigo_activo", data.codigo_activo)
       .input("ano_compra", data.ano_compra ?? null)
       .query(
         `
-        UPDATE activo SET
-          codigo_activo = @codigo_activo,
-          ano_compra = @ano_compra
+        UPDATE farmacia SET
+          codigo_activo = @codigo_activo
         WHERE oficina = @oficina
         `
-      )
+      ) */
   }
 
   return { ok: true };
@@ -235,3 +242,11 @@ export const actualizarActivo = async (data: Pick<Activo,
 
   return { ok: true };
 };
+
+export const verificarCodigoActivo = async (codigo: string) => {
+  const pool = await getConnection();
+  const result = await pool.request()
+    .input("codigo", codigo)
+    .query(`SELECT 1 AS encontrado FROM activo WHERE codigo_activo = @codigo`);
+  return { existe: result.recordset.length > 0 };
+}

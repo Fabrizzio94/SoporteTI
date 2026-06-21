@@ -1,22 +1,26 @@
 import { getConnection } from "@/lib/db";
 import { NextResponse } from "next/server";
-export const obtenerDatosDashboard = async () => {
+export const obtenerDatosDashboard = async (rol: string, cedula: string) => {
   const pool = await getConnection();
-
+  const whereExtra = rol === "TECNICO" ? `AND f.cedula_tecnico ='${cedula}'` : "";
+  /* if (rol === "TECNICO") {
+  request.input("cedula", cedula);
+  conditions.push("f.cedula_tecnico = @cedula");
+  } */
   const [tipoFarmacia, marcas, tecnologia, soTerminales, soServidor, ram, virtualizador, num_puntos_venta] = await Promise.all([
     pool.request().query(`
       SELECT COALESCE(tipo_farmacia, 'Sin datos') AS nombre, COUNT(*) AS total
-      FROM farmacia WHERE estado = 'A'
+      FROM farmacia f WHERE f.estado = 'A' ${whereExtra}
       GROUP BY tipo_farmacia
     `),
     pool.request().query(`
       SELECT COALESCE(marca, 'Sin datos') AS nombre, COUNT(*) AS total
-      FROM farmacia WHERE estado = 'A'
+      FROM farmacia f WHERE f.estado = 'A' ${whereExtra}
       GROUP BY marca ORDER BY total DESC
     `),
     pool.request().query(`
       SELECT COALESCE(tecnologia_terminales, 'Sin datos') AS nombre, COUNT(*) AS total
-      FROM farmacia WHERE estado = 'A'
+      FROM farmacia f WHERE f.estado = 'A' ${whereExtra}
       GROUP BY tecnologia_terminales
       ORDER BY total DESC
     `),
@@ -30,26 +34,38 @@ export const obtenerDatosDashboard = async () => {
   END */
     pool.request().query(`
       SELECT COALESCE(ssoo_terminales, 'Sin datos') AS nombre, COUNT(*) AS total
-      FROM farmacia WHERE estado = 'A'
+      FROM farmacia f WHERE f.estado = 'A' ${whereExtra}
       GROUP BY ssoo_terminales
     `),
     pool.request().query(`
       SELECT COALESCE(so_servidor, 'Sin datos') AS nombre, COUNT(*) AS total
-      FROM servidor GROUP BY so_servidor
+      FROM servidor s
+      INNER JOIN activo a ON a.codigo_activo = s.codigo_activo
+      INNER JOIN farmacia f ON f.oficina = a.oficina
+      WHERE f.estado = 'A' ${whereExtra}
+      GROUP BY s.so_servidor
     `),
     pool.request().query(`
       SELECT COALESCE(CAST(ram AS VARCHAR), 'Sin datos') AS nombre, COUNT(*) AS total
-      FROM servidor GROUP BY ram
+      FROM servidor s
+      INNER JOIN activo a ON a.codigo_activo = s.codigo_activo
+      INNER JOIN farmacia f ON f.oficina = a.oficina
+      WHERE f.estado = 'A' ${whereExtra}
+      GROUP BY s.ram
     `),
     pool.request().query(`
       SELECT COALESCE(virtualizer, 'Sin datos') AS nombre, COUNT(*) AS total
-      FROM servidor GROUP BY virtualizer
+      FROM servidor s
+      INNER JOIN activo a ON a.codigo_activo = s.codigo_activo
+      INNER JOIN farmacia f ON f.oficina = a.oficina
+      WHERE f.estado ='A' ${whereExtra}
+      GROUP BY s.virtualizer
     `),
     pool.request().query(`
           SELECT
             COALESCE(tecnologia_terminales, 'Sin datos') AS nombre,
             SUM(COALESCE(num_puntos_venta,0)) AS total
-          FROM farmacia WHERE estado = 'A'
+          FROM farmacia f WHERE f.estado = 'A' ${whereExtra}
           GROUP BY tecnologia_terminales
           ORDER BY total DESC
     `),

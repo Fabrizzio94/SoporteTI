@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { Usuario } from "@/app/types/tecnico";
-import { obtenerActivos, crearActivo, actualizarActivo } from "@/lib/services/activos/activoService";
+import { obtenerActivos, crearActivo, actualizarActivo, verificarCodigoActivo } from "@/lib/services/activos/activoService";
 
 export async function GET(req: Request) {
     try {
@@ -20,6 +20,12 @@ export async function GET(req: Request) {
         const farmacia = url.searchParams.get("farmacia") ?? "";
         const tecnico = url.searchParams.get("tecnico") ?? "";
         const marca = url.searchParams.get("marca") ?? "";
+        const codigo = url.searchParams.get("codigo");
+
+        if (codigo) {
+            const resultado = await verificarCodigoActivo(codigo);
+            return NextResponse.json(resultado);
+        }
 
         const resultado = await obtenerActivos(
             user.role,
@@ -60,8 +66,14 @@ export async function POST(req: Request) {
 
         return NextResponse.json(resultado);
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error POST activo:", error);
+        if (error?.number === 2627 || error?.originalError?.number === 2627) {
+            return NextResponse.json(
+                { error: "El código de activo ya existe." },
+                { status: 409 }
+            );
+        }
         return NextResponse.json({ error: "Error al guardar activo" }, { status: 500 });
     }
 }
