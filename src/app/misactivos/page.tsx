@@ -54,6 +54,9 @@ export default function MisActivosPage() {
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                N°
+              </th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
                 Código
               </th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
@@ -91,8 +94,11 @@ export default function MisActivosPage() {
                 </td>
               </tr>
             ) : (
-              filtered.map((a) => (
+              filtered.map((a, index) => (
                 <tr key={a.codigo_activo} className="hover:bg-slate-50">
+                  <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                    {index + 1}
+                  </td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">
                     {a.codigo_activo}
                   </td>

@@ -25,36 +25,33 @@ let matrizPool: sql.ConnectionPool | null = null;
 
 export async function getMatrizConnection() {
   if (matrizPool?.connected) return matrizPool;
-
-  const connectionString = 
+  console.log('MATRIZ_PASS:', JSON.stringify(process.env.MATRIZ_PASSWORD));
+  const connectionString =
     `Driver={ODBC Driver 17 for SQL Server};` +
     `Server=${process.env.MATRIZ_SERVER!};` +
     `Database=${process.env.MATRIZ_NAME!};` +
-    `UID=${process.env.MATRIZ_USER};`+
-    `PWD=${process.env.MATRIZ_PASSWORD};`+
-    `Trusted_Connection=yes;` +
+    `UID=${process.env.MATRIZ_USER};` +
+    `PWD=${process.env.MATRIZ_PASSWORD};` +
     `TrustServerCertificate=yes;`;
 
   const matrizConfig: sql.config = {
     driver: "msnodesqlv8",
     connectionString,
     options: {
-      trustedConnection: true,
       encrypt: false,
       trustServerCertificate: true,
     },
   } as any;
 
 
-    try {
-      // Creamos el pool indicando que use el driver de Windows
-      const matrizPool =  new sql.ConnectionPool(connectionString);
-      await matrizPool.connect();
-      return matrizPool;
-      console.log("Conectado exitosamente a Matriz via WinAuth");
-    } catch (err) {
-      console.error("Error en conexión Matriz:", err);
-      throw err;
-    }
-  
+  try {
+    // Creamos el pool indicando que use el driver de Windows
+    const matrizPool = new sql.ConnectionPool(connectionString);
+    await matrizPool.connect();
+    return matrizPool;
+  } catch (err) {
+    console.error("Error en conexión Matriz:", err);
+    throw err;
+  }
+
 }

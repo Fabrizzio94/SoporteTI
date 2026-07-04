@@ -7,14 +7,21 @@ import { authOptions } from "../auth/[...nextauth]/route";
 import { Usuario } from "@/app/types/tecnico";
 import { obtenerFarmacias, actualizarFarmacia } from "@/lib/services/farmacias/farmaciaService";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session)
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const user = session.user as Usuario;
-    const farmacias = await obtenerFarmacias(user.role, user.cedula);
+    const url = new URL(req.url);
+
+    const page = parseInt(url.searchParams.get("page") ?? "1");
+    const limit = parseInt(url.searchParams.get("limit") ?? "50");
+    const search = url.searchParams.get("busqueda") ?? "";
+    const estado = url.searchParams.get("estado") ?? "A";
+    const tecnico = url.searchParams.get("tecnico") ?? "";
+    const farmacias = await obtenerFarmacias(user.role, user.cedula, { page, limit, search, estado: estado as "A" | "I", tecnico, });
     return NextResponse.json(farmacias);
 
   } catch (error) {

@@ -1,35 +1,6 @@
 import { getConnection } from "@/lib/db";
 import { Activo } from "@/app/types/activo";
-/* export const obtenerActivos = async (rol: string, cedula: string) => {
-  const pool = await getConnection();
-  const whereExtra = rol === "TECNICO" ? `AND t.cedula = '${cedula}'` : "";
 
-  const result = await pool.request().query(`
-    SELECT
-      a.codigo_activo,
-      a.nombre_activo,
-      a.ano_compra,
-      a.descripcion,
-      a.estado,
-      a.oficina,
-      f.nombre           AS nombre_farmacia,
-      f.marca            AS marca_farmacia,
-      t.apellidos + ' ' + t.nombres AS nombre_tecnico,
-      f.cedula_tecnico,
-      s.virtualizer,
-      s.ram,
-      s.tipo_ram,
-      s.so_servidor
-    FROM activo a
-    INNER JOIN farmacia f ON f.oficina = a.oficina
-    LEFT JOIN tecnicos t  ON t.cedula  = f.cedula_tecnico
-    LEFT JOIN servidor s  ON s.codigo_activo = a.codigo_activo
-    WHERE a.estado = 'A' ${whereExtra} 
-    ORDER BY f.nombre, a.nombre_activo
-  `);
-
-  return result.recordset;
-}; */
 export const obtenerActivos = async (rol: string, cedula: string,
   filtros: {
     busqueda?: string;
@@ -250,3 +221,5 @@ export const verificarCodigoActivo = async (codigo: string) => {
     .query(`SELECT 1 AS encontrado FROM activo WHERE codigo_activo = @codigo`);
   return { existe: result.recordset.length > 0 };
 }
+
+

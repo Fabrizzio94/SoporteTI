@@ -31,7 +31,7 @@ export const obtenerDatosTablaDashboard = async (rol: string, cedula: string) =>
       FROM servidor s
       INNER JOIN activo  a ON a.codigo_activo = s.codigo_activo
       INNER JOIN farmacia f ON f.oficina      = a.oficina
-      WHERE 1=1 ${whereExtra}
+      WHERE 1=1 and a.estado = 'A' ${whereExtra}
       GROUP BY s.so_servidor
       ORDER BY total DESC
     `),
@@ -45,7 +45,7 @@ export const obtenerDatosTablaDashboard = async (rol: string, cedula: string) =>
       FROM servidor s
       INNER JOIN activo  a ON a.codigo_activo = s.codigo_activo
       INNER JOIN farmacia f ON f.oficina      = a.oficina
-      WHERE 1=1 ${whereExtra}
+      WHERE 1=1 and a.estado = 'A' ${whereExtra}
       GROUP BY s.ram
       ORDER BY total DESC
     `),
@@ -74,7 +74,7 @@ export const obtenerDatosTablaDashboard = async (rol: string, cedula: string) =>
       FROM servidor s
       INNER JOIN activo  a ON a.codigo_activo = s.codigo_activo
       INNER JOIN farmacia f ON f.oficina      = a.oficina
-      WHERE 1=1 ${whereExtra}
+      WHERE 1=1 and a.estado = 'A' ${whereExtra}
       GROUP BY a.ano_compra
       ORDER BY a.ano_compra ASC
     `),

@@ -65,10 +65,10 @@ export const procesarImportExcel = async (
                     .input("codigo_anterior", codigoAnterior)
                     .query(`UPDATE activo SET codigo_activo = @codigo_nuevo WHERE codigo_activo = @codigo_anterior`);
 
-                await pool.request()
+                /* await pool.request()
                     .input("codigo_nuevo", codigoActivo)
                     .input("codigo_anterior", codigoAnterior)
-                    .query(`UPDATE servidor SET codigo_activo = @codigo_nuevo WHERE codigo_activo = @codigo_anterior`);
+                    .query(`UPDATE servidor SET codigo_activo = @codigo_nuevo WHERE codigo_activo = @codigo_anterior`); */
 
                 activosEnBD.set(codigoActivo, { ...anteriorData, codigo_activo: codigoActivo });
                 activosEnBD.delete(codigoAnterior);
@@ -163,7 +163,6 @@ export const procesarImportExcel = async (
                 .query(`
           UPDATE activo SET
             nombre_activo = @nombre_activo,
-            ano_compra    = @ano_compra,
             descripcion   = @descripcion,
             oficina       = @oficina,
             cedula_tecnico= @cedula_tecnico,

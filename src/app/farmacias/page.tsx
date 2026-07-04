@@ -2,7 +2,7 @@
 import FarmaciasSearch from "../components/farmacias/FarmaciasSearch";
 import FarmaciaModal from "../components/farmacias/FarmaciasModal";
 import { Farmacia } from "@/app/types/farmacia";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import FarmaciasTable from "../components/farmacias/FarmaciasTable";
 import { useSession } from "next-auth/react";
 import { RefreshCcw } from "lucide-react"; // para iconos svg refresh
@@ -31,11 +31,40 @@ export default function FarmaciasPage() {
   const [mostrarConteo, setMostrarConteo] = useState(false);
   // estados de tecnicos para filtrar por desplegable
   const [tecnicoFiltro, setTecnicoFiltro] = useState<string | null>(null);
-  const refreshData = () => {
-    fetch("/api/farmacias")
-      .then((res) => res.json())
-      .then((data) => setFarmacias(Array.isArray(data) ? data : []));
-  };
+  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [conteoPropia, setConteoPropia] = useState(0);
+  const [conteoFranquicia, setConteoFranquicia] = useState(0);
+  const [conteoPorTecnico, setConteoPorTecnico] = useState<
+    { tecnico: string; total: number }[]
+  >([]);
+
+  const refreshData = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (debouncedSearch) params.set("busqueda", debouncedSearch);
+    params.set("page", paginaActual.toString());
+    params.set("limit", registroPorPagina.toString());
+    params.set("estado", mostrarInactivos ? "I" : "A");
+    if (tecnicoFiltro) params.set("tecnico", tecnicoFiltro);
+    try {
+      const res = await fetch(`/api/farmacias?${params.toString()}`);
+      const data = await res.json();
+      setFarmacias(data.data ?? []);
+      setTotal(data.total ?? 0);
+      setConteoPropia(data.stats.propias);
+      setConteoFranquicia(data.stats.franquicias);
+      setConteoPorTecnico(data.conteoTecnicos);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    debouncedSearch,
+    paginaActual,
+    registroPorPagina,
+    mostrarInactivos,
+    tecnicoFiltro,
+  ]);
   const handleSincronizar = async () => {
     setIsSyn(true);
     setHabilitarBoton(true);
@@ -60,21 +89,12 @@ export default function FarmaciasPage() {
     }
   };
   useEffect(() => {
-    fetch("/api/farmacias")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setFarmacias(data);
-        } else {
-          console.error("API devolvio error: ", data);
-          setFarmacias([]);
-        }
-      });
-  }, []);
+    refreshData();
+  }, [refreshData]);
 
   useEffect(() => {
     setPaginaActual(1);
-  }, [search, mostrarInactivos]);
+  }, [debouncedSearch, registroPorPagina, mostrarInactivos]);
   // useEffect para clic fuera del dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -88,52 +108,10 @@ export default function FarmaciasPage() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  const filtered = farmacias
-    .filter((t) => {
-      const cumpleBusqueda =
-        t.nombre?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        t.oficina.includes(debouncedSearch) ||
-        t.nombre_tecnico
-          ?.toLowerCase()
-          .includes(debouncedSearch.toLowerCase()) ||
-        t.marca.toLowerCase().includes(debouncedSearch.toLowerCase());
-      //const cumpleEstado = mostrarInactivos ? true : t.estado === "A";
-      const cumpleEstado = mostrarInactivos
-        ? t.estado !== "A"
-        : t.estado === "A";
-      const cumpleTecnico = tecnicoFiltro
-        ? t.nombre_tecnico === tecnicoFiltro
-        : true;
-      return cumpleBusqueda && cumpleEstado && cumpleTecnico;
-    })
-    .sort((a, b) => {
-      if (tecnicoFiltro) {
-        return (a.nombre ?? "").localeCompare(b.nombre ?? "");
-      }
-      return (a.nombre_tecnico ?? "").localeCompare(b.nombre_tecnico ?? "");
-    });
-  // CONTEO DE FARMACIAS EN ETIQUETA PARA INFORMACION
-  const conteoTotal = filtered.length;
-  const conteoPorTecnico = filtered.reduce(
-    (acc, f) => {
-      const tecnico = f.nombre_tecnico || "Sin asignar";
-      acc[tecnico] = (acc[tecnico] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>,
-  );
-  const conteoPropia = filtered.filter(
-    (f) => f.tipo_farmacia === "Propia",
-  ).length;
-  const conteoFranquicia = filtered.filter(
-    (f) => f.tipo_farmacia === "Franquicia",
-  ).length;
-  // PAGINACION TECNICOS
-  const ultimoIndice = paginaActual * registroPorPagina;
-  const primerIndice = ultimoIndice - registroPorPagina;
 
-  const farmaciasPaginadas = filtered.slice(primerIndice, ultimoIndice);
-  const totalPaginas = Math.ceil(filtered.length / registroPorPagina);
+  const conteoTotal = total;
+
+  const totalPaginas = Math.ceil(total / registroPorPagina);
   return (
     <main className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Farmacias</h1>
@@ -182,25 +160,23 @@ export default function FarmaciasPage() {
                     Quitar Filtro
                   </div>
                 )}
-                {Object.entries(conteoPorTecnico)
-                  .sort((a, b) => a[0].localeCompare(b[0]))
-                  .map(([tecnico, count]) => (
-                    <div
-                      key={tecnico}
-                      onClick={() => {
-                        setTecnicoFiltro(tecnico);
-                        setMostrarConteo(false);
-                      }}
-                      className="flex justify-between text-sm px-2 py-1 hover:bg-lime-300 rounded"
-                    >
-                      <span className="text-slate-700 group-hover:text-indigo-700 group-hover:font-medium transition-colors">
-                        {tecnico}
-                      </span>
-                      <span className="font-bold text-indigo-600 bg-indigo-50 group-hover:bg-indigo-200 group-hover:text-indigo-800 px-2 py-0.5 rounded-full ml-4 transition-colors">
-                        {count}
-                      </span>
-                    </div>
-                  ))}
+                {conteoPorTecnico.map(({ tecnico, total }) => (
+                  <div
+                    key={tecnico}
+                    onClick={() => {
+                      setTecnicoFiltro(tecnico);
+                      setMostrarConteo(false);
+                    }}
+                    className="flex justify-between text-sm px-2 py-1 hover:bg-lime-300 rounded"
+                  >
+                    <span className="text-slate-700 group-hover:text-indigo-700 group-hover:font-medium transition-colors">
+                      {tecnico}
+                    </span>
+                    <span className="font-bold text-indigo-600 bg-indigo-50 group-hover:bg-indigo-200 group-hover:text-indigo-800 px-2 py-0.5 rounded-full ml-4 transition-colors">
+                      {total}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -256,10 +232,18 @@ export default function FarmaciasPage() {
           refreshData();
         }}
       />
-      <FarmaciasTable
-        farmacias={farmaciasPaginadas}
-        onEdit={(t) => setFarmaciaSeleccionada(t)}
-      />
+      {loading ? (
+        <div className="space-y-2 mt-4">
+          {[...Array(registroPorPagina)].map((_, i) => (
+            <div key={i} className="h-10 bg-slate-100 rounded animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <FarmaciasTable
+          farmacias={farmacias}
+          onEdit={(t) => setFarmaciaSeleccionada(t)}
+        />
+      )}
 
       {/* paginacion de farmacias */}
       <div className="mt-6 flex items-center justify-between">
