@@ -25,7 +25,6 @@ let matrizPool: sql.ConnectionPool | null = null;
 
 export async function getMatrizConnection() {
   if (matrizPool?.connected) return matrizPool;
-  console.log('MATRIZ_PASS:', JSON.stringify(process.env.MATRIZ_PASSWORD));
   const connectionString =
     `Driver={ODBC Driver 17 for SQL Server};` +
     `Server=${process.env.MATRIZ_SERVER!};` +
