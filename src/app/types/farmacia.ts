@@ -20,3 +20,12 @@ export interface Farmacia {
   ram?: number | null;
   virtualizer?: string | null;
 }
+
+export interface FarmaciaSelectProps {
+  farmacias: FarmaciaListado[];
+  value: string;
+  onChange: (oficina: string) => void;
+  placeholder?: string;
+  className?: string;
+}
+export type FarmaciaListado = Pick<Farmacia, "oficina" | "nombre">;

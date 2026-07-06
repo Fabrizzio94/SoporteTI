@@ -26,6 +26,7 @@ import ActivosTable from "../components/activos/ActivosTable";
 import ActivoModal from "../components/activos/ActivoModal";
 import ActivosSearch from "../components/activos/ActivosSearch";
 import { useDebounce } from "../hooks/useDebounce";
+import { FarmaciaListado } from "../types/farmacia";
 
 const TIPO_CHIPS = [
   { nombre: "CPU", label: "CPU (Servidor)", icon: Server },
@@ -80,9 +81,7 @@ export default function ActivosPage() {
   const { data: session } = useSession();
   const user = session?.user as Usuario;
   const [activos, setActivos] = useState<Activo[]>([]);
-  const [farmacias, setFarmacias] = useState<
-    { oficina: string; nombre: string }[]
-  >([]);
+  const [farmacias, setFarmacias] = useState<FarmaciaListado[]>([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [total, setTotal] = useState(0);
@@ -109,6 +108,7 @@ export default function ActivosPage() {
   >([]);
   const [loading, setLoading] = useState(false);
   const limit = registroPorPagina;
+
   useEffect(() => {
     fetch("/api/activos/filtros")
       .then((r) => r.json())

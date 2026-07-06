@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { Activo } from "@/app/types/activo";
 import toast from "react-hot-toast";
 import { useDebounce } from "@/app/hooks/useDebounce";
-
+import FarmaciaSelect from "../farmacias/FarmaciasSelect";
+import { FarmaciaListado } from "@/app/types/farmacia";
 type Props = {
   open: boolean;
   activo?: Activo | null;
-  farmacias: { oficina: string; nombre: string }[];
+  farmacias: FarmaciaListado[];
   onClose: () => void;
   onSaved: () => void;
 };
@@ -172,7 +173,7 @@ export default function ActivoModal({
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-lg rounded-xl shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white w-full max-w-lg rounded-xl shadow-xl max-h-[90vh] ">
         {/* Header */}
         <div className="flex justify-between items-center px-5 py-4 border-b border-slate-100">
           <h2 className="text-sm font-bold text-slate-800">
@@ -276,7 +277,13 @@ export default function ActivoModal({
                   <label className="text-xs text-slate-500 font-medium block mb-1">
                     Farmacia <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <FarmaciaSelect
+                    className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
+                    farmacias={farmacias}
+                    value={oficina}
+                    onChange={setOficina}
+                  />
+                  {/* <select
                     className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
                     value={oficina}
                     onChange={(e) => setOficina(e.target.value)}
@@ -287,7 +294,7 @@ export default function ActivoModal({
                         {f.nombre}
                       </option>
                     ))}
-                  </select>
+                  </select> */}
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 font-medium block mb-1">

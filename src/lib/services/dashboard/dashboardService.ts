@@ -42,7 +42,10 @@ export const obtenerDatosDashboard = async (rol: string, cedula: string) => {
       FROM servidor s
       INNER JOIN activo a ON a.codigo_activo = s.codigo_activo
       INNER JOIN farmacia f ON f.oficina = a.oficina
-      WHERE f.estado = 'A' and a.estado = 'A' ${whereExtra}
+      WHERE f.estado = 'A'
+      AND a.estado = 'A' 
+      AND s.es_principal = 1
+      ${whereExtra}
       GROUP BY s.so_servidor
     `),
     pool.request().query(`
@@ -50,7 +53,10 @@ export const obtenerDatosDashboard = async (rol: string, cedula: string) => {
       FROM servidor s
       INNER JOIN activo a ON a.codigo_activo = s.codigo_activo
       INNER JOIN farmacia f ON f.oficina = a.oficina
-      WHERE f.estado = 'A' and a.estado = 'A' ${whereExtra}
+      WHERE f.estado = 'A' 
+      AND a.estado = 'A' 
+      AND s.es_principal = 1
+      ${whereExtra}
       GROUP BY s.ram
     `),
     pool.request().query(`
@@ -58,7 +64,10 @@ export const obtenerDatosDashboard = async (rol: string, cedula: string) => {
       FROM servidor s
       INNER JOIN activo a ON a.codigo_activo = s.codigo_activo
       INNER JOIN farmacia f ON f.oficina = a.oficina
-      WHERE f.estado ='A' and a.estado = 'A' ${whereExtra}
+      WHERE f.estado ='A'
+      AND a.estado = 'A'
+      AND s.es_principal = 1
+      ${whereExtra}
       GROUP BY s.virtualizer
     `),
     pool.request().query(`

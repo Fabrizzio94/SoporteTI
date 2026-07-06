@@ -150,7 +150,6 @@ export const procesarImportExcel = async (
             resumen.franquicia_omitidos++;
             continue;
         }
-
         if (yaExiste) {
             await pool.request()
                 .input("codigo_activo", codigoActivo)
@@ -174,29 +173,53 @@ export const procesarImportExcel = async (
 
             // Estaba inactivo y vuelve a aparecer en Excel
             if (activoEnBD.estado === "I") {
-                await pool.request()
+                const bajaManual = await pool.request()
                     .input("codigo_activo", codigoActivo)
-                    .input("nombre_activo", nombreActivo)
-                    .input("oficina", farmacia.oficina)
-                    .input("cedula_tecnico", activoEnBD.cedula_tecnico ?? null)
-                    .input("nombre_tecnico", activoEnBD.nombre_tecnico ?? "Automático")
-                    .input("ano_compra", anoCompra ?? null)
-                    .input("tipo_baja", "Automatico")
-                    .input("verificado", 1)
-                    .input("fecha_verificacion", new Date())
                     .query(`
-            INSERT INTO historico_activo (
-              codigo_activo, nombre_activo, oficina, cedula_tecnico,
-              nombre_tecnico, ano_compra, motivo_baja,
-              tipo_baja, verificado, fecha_verificacion
-            ) VALUES (
-              @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
-              @nombre_tecnico, @ano_compra,
-              'Reactivado — vuelve a aparecer en carga Excel',
-              @tipo_baja, @verificado, @fecha_verificacion
-            )
-          `);
-                resumen.reactivados++;
+                    SELECT TOP 1 id
+                    FROM historico_activo
+                    WHERE codigo_activo = @codigo_activo
+                        AND tipo_baja = 'MANUAL'
+                        AND verificado = 0
+                    `
+                    )
+                if (bajaManual.recordset.length > 0) {
+                    await pool.request()
+                        .input("codigo_activo", codigoActivo)
+                        .query(`
+                        UPDATE historico_activo
+                        SET
+                            verificado = 1,
+                            fecha_verificacion = GETDATE()
+                        WHERE codigo_activo = @codigo_activo
+                            AND tipo_baja = 'MANUAL'
+                            AND verificado = 0
+                        `);
+                } else {
+                    await pool.request()
+                        .input("codigo_activo", codigoActivo)
+                        .input("nombre_activo", nombreActivo)
+                        .input("oficina", farmacia.oficina)
+                        .input("cedula_tecnico", activoEnBD.cedula_tecnico ?? null)
+                        .input("nombre_tecnico", activoEnBD.nombre_tecnico ?? "Automático")
+                        .input("ano_compra", anoCompra ?? null)
+                        .input("tipo_baja", "Automatico")
+                        .input("verificado", 1)
+                        .input("fecha_verificacion", new Date())
+                        .query(`
+                INSERT INTO historico_activo (
+                codigo_activo, nombre_activo, oficina, cedula_tecnico,
+                nombre_tecnico, ano_compra, motivo_baja,
+                tipo_baja, verificado, fecha_verificacion
+                ) VALUES (
+                @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
+                @nombre_tecnico, @ano_compra,
+                'Reactivado — vuelve a aparecer en carga Excel',
+                @tipo_baja, @verificado, @fecha_verificacion
+                )
+            `);
+                    resumen.reactivados++;
+                }
             }
 
             resumen.actualizados++;
@@ -265,7 +288,7 @@ export const procesarImportExcel = async (
     // ── LOOP 2 — BAJAS AUTOMÁTICAS ───────────────────────────────
     for (const [codigo, activo] of activosEnBD) {
         if (codigosEnExcel.has(codigo)) continue;
-
+        if (activo.tipo_farmacia === "Franquicia") continue;
         if (activo.estado !== "A") {
             const manualPendienteCheck = await pool.request()
                 .input("codigo_activo", codigo)
