@@ -1,4 +1,5 @@
 import type { ActualizarActivoExistenteParams } from "@/app/types/activo";
+import { obtenerEstadoHistorico } from "@/lib/helpers/excelHelpers";
 
 export const actualizarActivoExistente = async ({
     pool,
@@ -11,15 +12,60 @@ export const actualizarActivoExistente = async ({
     nombreCustodio,
     resumen,
 }: ActualizarActivoExistenteParams) => {
-    await pool.request()
-        .input("codigo_activo", codigoActivo)
-        .input("nombre_activo", nombreActivo)
-        .input("ano_compra", anoCompra)
-        .input("descripcion", detalle)
-        .input("oficina", farmacia.oficina)
-        .input("cedula_tecnico", farmacia.cedula_tecnico ?? null)
-        .input("nombre_custodio", nombreCustodio)
-        .query(`
+    // Estaba inactivo y vuelve a aparecer en Excel
+    const historico = await obtenerEstadoHistorico(
+        pool,
+        codigoActivo
+    );
+    //if (!historico) return;
+    if (activoEnBD.estado === "I") {
+        await pool.request()
+            .input("codigo_activo", codigoActivo)
+            .input("nombre_activo", nombreActivo)
+            .input("oficina", farmacia.oficina)
+            .input("cedula_tecnico", activoEnBD.cedula_tecnico ?? null)
+            .input("nombre_tecnico", activoEnBD.nombre_tecnico ?? "Automático")
+            .input("ano_compra", anoCompra ?? null)
+            .input("tipo_baja", "Automatico")
+            .input("verificado", 1)
+            .input("fecha_verificacion", new Date())
+            .query(`
+                INSERT INTO historico_activo (
+                codigo_activo, nombre_activo, oficina, cedula_tecnico,
+                nombre_tecnico, ano_compra, motivo_baja,
+                tipo_baja, verificado, fecha_verificacion
+                ) VALUES (
+                @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
+                @nombre_tecnico, @ano_compra,
+                'Reactivado — vuelve a aparecer en carga Excel',
+                @tipo_baja, @verificado, @fecha_verificacion
+                )
+            `);
+        resumen.reactivados++;
+    } else {
+        if (!historico) {
+            resumen.actualizados++;
+            return;
+        }
+        switch (historico.tipo_baja) {
+            case "MANUAL":
+                if (historico.verificado === 0) {
+                    resumen.actualizados++;
+                    return;
+                }
+                break;
+            case "Automatico":
+                break;
+        }
+        await pool.request()
+            .input("codigo_activo", codigoActivo)
+            .input("nombre_activo", nombreActivo)
+            .input("ano_compra", anoCompra)
+            .input("descripcion", detalle)
+            .input("oficina", farmacia.oficina)
+            .input("cedula_tecnico", farmacia.cedula_tecnico ?? null)
+            .input("nombre_custodio", nombreCustodio)
+            .query(`
           UPDATE activo SET
             nombre_activo = @nombre_activo,
             descripcion   = @descripcion,
@@ -28,12 +74,14 @@ export const actualizarActivoExistente = async ({
             nombre_custodio=@nombre_custodio,
             estado        = 'A'
           WHERE codigo_activo = @codigo_activo
-        `); // pendiente de borrar ano_compra para que no actualice
-    // cuando carga nuevo archivo y mantener año de equipos
+        `);
 
-    // Estaba inactivo y vuelve a aparecer en Excel
-    if (activoEnBD.estado === "I") {
-        const bajaManual = await pool.request()
+    }
+
+    resumen.actualizados++;
+}
+/*
+const bajaManual = await pool.request()
             .input("codigo_activo", codigoActivo)
             .query(`
                     SELECT TOP 1 id
@@ -79,8 +127,4 @@ export const actualizarActivoExistente = async ({
                 )
             `);
             resumen.reactivados++;
-        }
-    }
-
-    resumen.actualizados++;
-}
+*/

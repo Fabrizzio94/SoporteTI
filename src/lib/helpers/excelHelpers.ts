@@ -1,3 +1,4 @@
+import { ConnectionPool } from "mssql";
 import * as XLSX from "xlsx";
 
 export const ACTIVOS_PERMITIDOS = new Set([
@@ -54,3 +55,22 @@ export const extraerAnoCompra = (fechaAlta: any): number | null => {
     if (fechaAlta) return new Date(fechaAlta).getFullYear();
     return null;
 };
+
+export const obtenerEstadoHistorico = async (
+    pool: ConnectionPool,
+    codigoActivo: string
+) => {
+    const result = await pool.request()
+        .input("codigo_activo", codigoActivo)
+        .query(`
+            SELECT TOP 1
+                tipo_baja,
+                verificado,
+                motivo_baja,
+                fecha_baja
+            FROM historico_activo
+            WHERE codigo_activo = @codigo_activo
+            ORDER BY fecha_baja DESC
+            `);
+    return result.recordset[0] ?? null;
+}
