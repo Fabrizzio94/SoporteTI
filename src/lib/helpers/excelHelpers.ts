@@ -56,7 +56,23 @@ export const extraerAnoCompra = (fechaAlta: any): number | null => {
     return null;
 };
 
-export const obtenerEstadoHistorico = async (
+export const obtenerBajaManualPendiente = async (
+    pool: ConnectionPool,
+    codigoActivo: string
+) => {
+    const result = await pool.request()
+        .input("codigo_activo", codigoActivo)
+        .query(`
+            SELECT TOP 1 *
+            FROM historico_activo
+            WHERE codigo_activo = @codigo_activo
+                AND tipo_baja = 'MANUAL'
+                AND verificado = 0
+            ORDER BY fecha_baja DESC
+            `);
+    return result.recordset[0] ?? null;
+}
+export const obtenerUltimoHistorico = async (
     pool: ConnectionPool,
     codigoActivo: string
 ) => {

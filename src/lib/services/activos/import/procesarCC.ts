@@ -10,12 +10,6 @@ export const procesarCC = async ({
     resumen,
 }: ProcesarCCParams): Promise<boolean> => {
 
-
-    /*  if (!farmacia && !esContactCenter) {
-         resumen.sin_farmacia.push(`${codigoActivo} - ${centroCosto}`);
-         return;
-     } */
-
     const tecnicoData = await pool.request()
         .input("nombre_custodio", nombreCustodio?.toUpperCase().trim() ?? "")
         .query(`

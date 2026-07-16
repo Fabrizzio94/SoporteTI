@@ -12,8 +12,8 @@ export const procesarBajas = async ({
     codigosEnExcel,
     resumen,
 }: ProcesarBajasParams) => {
-
     for (const [codigo, activo] of activosEnBD) {
+        if (!activo.control_importacion) continue;
         if (codigosEnExcel.has(codigo)) continue;
         if (activo.tipo_farmacia === "Franquicia") continue;
         if (activo.estado !== "A") {

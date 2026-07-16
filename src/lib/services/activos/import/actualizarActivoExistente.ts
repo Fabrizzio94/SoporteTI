@@ -1,5 +1,5 @@
 import type { ActualizarActivoExistenteParams } from "@/app/types/activo";
-import { obtenerEstadoHistorico } from "@/lib/helpers/excelHelpers";
+import { obtenerBajaManualPendiente, obtenerUltimoHistorico } from "@/lib/helpers/excelHelpers";
 
 export const actualizarActivoExistente = async ({
     pool,
@@ -13,60 +13,22 @@ export const actualizarActivoExistente = async ({
     resumen,
 }: ActualizarActivoExistenteParams) => {
     // Estaba inactivo y vuelve a aparecer en Excel
-    const historico = await obtenerEstadoHistorico(
+    const historico = await obtenerUltimoHistorico(
         pool,
         codigoActivo
     );
-    //if (!historico) return;
-    if (activoEnBD.estado === "I") {
-        await pool.request()
-            .input("codigo_activo", codigoActivo)
-            .input("nombre_activo", nombreActivo)
-            .input("oficina", farmacia.oficina)
-            .input("cedula_tecnico", activoEnBD.cedula_tecnico ?? null)
-            .input("nombre_tecnico", activoEnBD.nombre_tecnico ?? "Automático")
-            .input("ano_compra", anoCompra ?? null)
-            .input("tipo_baja", "Automatico")
-            .input("verificado", 1)
-            .input("fecha_verificacion", new Date())
-            .query(`
-                INSERT INTO historico_activo (
-                codigo_activo, nombre_activo, oficina, cedula_tecnico,
-                nombre_tecnico, ano_compra, motivo_baja,
-                tipo_baja, verificado, fecha_verificacion
-                ) VALUES (
-                @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
-                @nombre_tecnico, @ano_compra,
-                'Reactivado — vuelve a aparecer en carga Excel',
-                @tipo_baja, @verificado, @fecha_verificacion
-                )
-            `);
-        resumen.reactivados++;
-    } else {
-        if (!historico) {
-            resumen.actualizados++;
-            return;
-        }
-        switch (historico.tipo_baja) {
-            case "MANUAL":
-                if (historico.verificado === 0) {
-                    resumen.actualizados++;
-                    return;
-                }
-                break;
-            case "Automatico":
-                break;
-        }
-        await pool.request()
-            .input("codigo_activo", codigoActivo)
-            .input("nombre_activo", nombreActivo)
-            .input("ano_compra", anoCompra)
-            .input("descripcion", detalle)
-            .input("oficina", farmacia.oficina)
-            .input("cedula_tecnico", farmacia.cedula_tecnico ?? null)
-            .input("nombre_custodio", nombreCustodio)
-            .query(`
-          UPDATE activo SET
+    const bajaManualPendiente = await obtenerBajaManualPendiente(pool, codigoActivo);
+    await pool.request()
+        .input("codigo_activo", codigoActivo)
+        .input("nombre_activo", nombreActivo)
+        .input("ano_compra", anoCompra)
+        .input("descripcion", detalle)
+        .input("oficina", farmacia.oficina)
+        .input("cedula_tecnico", farmacia.cedula_tecnico ?? null)
+        .input("nombre_custodio", nombreCustodio)
+        .query(`
+          UPDATE activo 
+          SET
             nombre_activo = @nombre_activo,
             descripcion   = @descripcion,
             oficina       = @oficina,
@@ -75,46 +37,42 @@ export const actualizarActivoExistente = async ({
             estado        = 'A'
           WHERE codigo_activo = @codigo_activo
         `);
-
-    }
-
-    resumen.actualizados++;
-}
-/*
-const bajaManual = await pool.request()
+    if (activoEnBD.control_importacion === 0) {
+        await pool.request()
             .input("codigo_activo", codigoActivo)
             .query(`
-                    SELECT TOP 1 id
-                    FROM historico_activo
-                    WHERE codigo_activo = @codigo_activo
-                        AND tipo_baja = 'MANUAL'
-                        AND verificado = 0
-                    `
-            )
-        if (bajaManual.recordset.length > 0) {
-            await pool.request()
-                .input("codigo_activo", codigoActivo)
-                .query(`
-                        UPDATE historico_activo
-                        SET
-                            verificado = 1,
-                            fecha_verificacion = GETDATE()
-                        WHERE codigo_activo = @codigo_activo
-                            AND tipo_baja = 'MANUAL'
-                            AND verificado = 0
-                        `);
-        } else {
-            await pool.request()
-                .input("codigo_activo", codigoActivo)
-                .input("nombre_activo", nombreActivo)
-                .input("oficina", farmacia.oficina)
-                .input("cedula_tecnico", activoEnBD.cedula_tecnico ?? null)
-                .input("nombre_tecnico", activoEnBD.nombre_tecnico ?? "Automático")
-                .input("ano_compra", anoCompra ?? null)
-                .input("tipo_baja", "Automatico")
-                .input("verificado", 1)
-                .input("fecha_verificacion", new Date())
-                .query(`
+                UPDATE activo
+                SET control_importacion = 1
+                WHERE codigo_activo = @codigo_activo
+                `);
+    }
+    if (activoEnBD.estado === "A") {
+        resumen.actualizados++;
+        return;
+    }
+    if (bajaManualPendiente) {
+        resumen.actualizados++;
+        return;
+    }
+    if (!historico) {
+        resumen.actualizados++;
+        return;
+    }
+    if (historico.tipo_baja !== "Automatico") {
+        resumen.actualizados++;
+        return;
+    }
+    await pool.request()
+        .input("codigo_activo", codigoActivo)
+        .input("nombre_activo", nombreActivo)
+        .input("oficina", farmacia.oficina)
+        .input("cedula_tecnico", activoEnBD.cedula_tecnico ?? null)
+        .input("nombre_tecnico", activoEnBD.nombre_tecnico ?? "Automático")
+        .input("ano_compra", anoCompra ?? null)
+        .input("tipo_baja", "Automatico")
+        .input("verificado", 1)
+        .input("fecha_verificacion", new Date())
+        .query(`
                 INSERT INTO historico_activo (
                 codigo_activo, nombre_activo, oficina, cedula_tecnico,
                 nombre_tecnico, ano_compra, motivo_baja,
@@ -126,5 +84,6 @@ const bajaManual = await pool.request()
                 @tipo_baja, @verificado, @fecha_verificacion
                 )
             `);
-            resumen.reactivados++;
-*/
+    resumen.reactivados++;
+    resumen.actualizados++;
+}

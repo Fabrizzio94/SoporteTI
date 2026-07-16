@@ -20,8 +20,8 @@ export const insertarActivoNuevo = async ({
         .input("cedula_tecnico", farmacia.cedula_tecnico ?? null)
         .input("nombre_custodio", nombreCustodio)
         .query(`
-          INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina, cedula_tecnico,nombre_custodio)
-          VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina, @cedula_tecnico, @nombre_custodio)
+          INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina, cedula_tecnico,nombre_custodio, control_importacion)
+          VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina, @cedula_tecnico, @nombre_custodio,1)
         `);
     resumen.insertados++;
     activosEnBD.set(codigoActivo, {
@@ -31,6 +31,7 @@ export const insertarActivoNuevo = async ({
         oficina: farmacia.oficina,
         cedula_tecnico: farmacia.cedula_tecnico ?? null,
         ano_compra: anoCompra,
+        control_importacion: 1,
         tipo_farmacia: farmacia.tipo_farmacia,
         nombre_tecnico: null,
     });
