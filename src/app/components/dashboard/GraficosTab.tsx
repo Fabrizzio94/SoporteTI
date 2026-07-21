@@ -15,6 +15,7 @@ import {
   COLORS,
   ALIAS,
 } from "@/app/types/dashboardTypes";
+import ChartCardAgrupado from "./ChartItemGroup";
 
 // ── Tooltip personalizado ──────────────────────────────────────
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -47,7 +48,6 @@ const ChartCard = ({
   title,
   data = [],
   color = COLORS.primary,
-  tooltipSuffix = "registros",
   inclinado = false,
   mostrarValores = false,
 }: {
@@ -164,6 +164,12 @@ export default function GraficosTab({ data }: Props) {
             inclinado
             mostrarValores
             tooltipSuffix="puntos de venta"
+          />
+          <ChartCardAgrupado
+            title="Tecnología Propias vs Franquicias"
+            data={data.puntosVentaAgrupado}
+            inclinado
+            mostrarValores
           />
         </div>
       </div>

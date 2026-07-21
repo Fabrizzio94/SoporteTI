@@ -12,7 +12,7 @@ export type Actividad = {
   ano_compra?: number;
   codigo_reemplazo?: string;
   fecha_baja: string;
-  tipo_baja: "MANUAL" | "AUTO";
+  tipo_baja: "MANUAL" | "AUTO" | "REACTIVADO";
   verificado: boolean;
   fecha_verificacion?: string;
 };

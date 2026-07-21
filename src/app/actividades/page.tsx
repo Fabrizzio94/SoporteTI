@@ -10,10 +10,17 @@ import { useDebounce } from "../hooks/useDebounce";
 const FILAS_POR_PAGINA = 10;
 
 const badgeEstado = (a: Actividad) => {
+  if (a.tipo_baja === "REACTIVADO")
+    return (
+      <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+        ↩ Reactivado
+      </span>
+    );
+
   if (a.motivo_baja === "Reactivado — vuelve a aparecer en carga Excel")
     return (
       <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-pink-50 text-pink-700">
-        ↩ Reactivado
+        ↩ Reactivado Excel
       </span>
     );
   if (a.tipo_farmacia === "Franquicia")

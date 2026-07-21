@@ -16,7 +16,13 @@ export type DashboardData = {
     ram: ChartItem[];
     virtualizador: ChartItem[];
     num_puntos_venta: ChartItem[];
+    puntosVentaAgrupado: ChartItemAgrupado[];
 };
+export type ChartItemAgrupado = {
+    nombre: string;
+    propias: number;
+    franquicias: number;
+}
 // ── Tipo Tablas───────────────────────────────────────────────── 
 export type TablaItem = {
     nombre: string;
@@ -48,4 +54,6 @@ export const COLORS = {
     warning: "#f59e0b",
     muted: "#94a3b8",
     sinDatos: "#e2e8f0",
+    COLOR_PROPIAS: "#0B2D39",
+    COLOR_FRANQUICIAS: "#C7A24B",
 };

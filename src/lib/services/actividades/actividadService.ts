@@ -156,8 +156,40 @@ export const reactivarActividad = async (data: {
       UPDATE activo SET estado = 'A', oficina = @oficina
       WHERE codigo_activo = @codigo_activo
     `);
-
   await pool.request()
+    .input("codigo_activo", hist.codigo_activo)
+    .query(`
+        UPDATE historico_activo
+        SET
+            verificado = 1,
+            fecha_verificacion = GETDATE(),
+            observacion = CONCAT(COALESCE(observacion,''), + ' | Verificado por reactivación manual')
+        WHERE codigo_activo = @codigo_activo
+          AND tipo_baja = 'MANUAL'
+          AND verificado = 0
+    `);
+  await pool.request()
+    .input("codigo_activo", hist.codigo_activo)
+    .input("nombre_activo", hist.nombre_activo)
+    .input("oficina", data.nueva_oficina ?? hist.oficina)
+    .input("cedula_tecnico", hist.cedula_tecnico ?? null)
+    .input("nombre_tecnico", hist.nombre_tecnico ?? null)
+    .input("ano_compra", hist.ano_compra ?? null)
+    .input("motivo_baja", data.nueva_oficina ? "Reactivado y Reasignado a otra farmacia" : "Reactivado")
+    .input("observacion", data.observacion ?? null)
+    .input("tipo_baja", "REACTIVADO")
+    .query(`
+      INSERT INTO historico_activo (
+        codigo_activo, nombre_activo, oficina, cedula_tecnico,
+        nombre_tecnico, ano_compra, motivo_baja, observacion,
+        tipo_baja
+      ) VALUES (
+        @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
+        @nombre_tecnico, @ano_compra, @motivo_baja, @observacion,
+        @tipo_baja
+      )
+    `);
+  /* await pool.request()
     .input("codigo_activo", hist.codigo_activo)
     .input("nombre_activo", hist.nombre_activo)
     .input("oficina", data.nueva_oficina ?? hist.oficina)
@@ -166,20 +198,18 @@ export const reactivarActividad = async (data: {
     .input("ano_compra", hist.ano_compra ?? null)
     .input("motivo_baja", data.nueva_oficina ? "Reasignado a otra farmacia" : "Reactivado")
     .input("observacion", data.observacion ?? null)
-    .input("tipo_baja", "MANUAL")
-    .input("verificado", 1)
-    .input("fecha_verificacion", new Date())
+    .input("tipo_baja", "REACTIVADO")
     .query(`
       INSERT INTO historico_activo (
         codigo_activo, nombre_activo, oficina, cedula_tecnico,
         nombre_tecnico, ano_compra, motivo_baja, observacion,
-        tipo_baja, verificado, fecha_verificacion
+        tipo_baja
       ) VALUES (
         @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
         @nombre_tecnico, @ano_compra, @motivo_baja, @observacion,
-        @tipo_baja, @verificado, @fecha_verificacion
+        @tipo_baja
       )
-    `);
+    `); */
 
   return { ok: true, accion: "reactivado" };
 };

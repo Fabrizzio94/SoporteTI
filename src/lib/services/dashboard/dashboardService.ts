@@ -7,7 +7,18 @@ export const obtenerDatosDashboard = async (rol: string, cedula: string) => {
   request.input("cedula", cedula);
   conditions.push("f.cedula_tecnico = @cedula");
   } */
-  const [tipoFarmacia, marcas, tecnologia, soTerminales, soServidor, ram, virtualizador, num_puntos_venta] = await Promise.all([
+  const [
+    tipoFarmacia,
+    marcas,
+    tecnologia,
+    soTerminales,
+    soServidor,
+    ram,
+    virtualizador,
+    num_puntos_venta,
+    puntosVentaAgrupado
+    //puntosVentaxTecnologia
+  ] = await Promise.all([
     pool.request().query(`
       SELECT COALESCE(tipo_farmacia, 'Sin datos') AS nombre, COUNT(*) AS total
       FROM farmacia f WHERE f.estado = 'A' ${whereExtra}
@@ -71,13 +82,46 @@ export const obtenerDatosDashboard = async (rol: string, cedula: string) => {
       GROUP BY s.virtualizer
     `),
     pool.request().query(`
+      SELECT
+        COALESCE(tecnologia_terminales, 'Sin datos') AS nombre,
+        SUM(COALESCE(num_puntos_venta, 0)) AS total
+      FROM farmacia f
+      WHERE f.estado = 'A' ${whereExtra}
+      GROUP BY tecnologia_terminales
+      HAVING SUM(COALESCE(num_puntos_venta, 0)) > 0  -- ← excluye los que suman 0
+      ORDER BY total DESC
+      `),
+    /* pool.request().query(`
           SELECT
             COALESCE(tecnologia_terminales, 'Sin datos') AS nombre,
             SUM(COALESCE(num_puntos_venta,0)) AS total
           FROM farmacia f WHERE f.estado = 'A' ${whereExtra}
           GROUP BY tecnologia_terminales
           ORDER BY total DESC
-    `),
+    `), */
+    pool.request().query(`
+          SELECT
+            COALESCE(tecnologia_terminales, 'Sin datos') AS nombre,
+            SUM(CASE WHEN tipo_farmacia = 'Propia'     THEN 1 ELSE 0 END) AS propias,
+            SUM(CASE WHEN tipo_farmacia = 'Franquicia' THEN 1 ELSE 0 END) AS franquicias
+          FROM farmacia f
+          WHERE f.estado = 'A' ${whereExtra}
+          GROUP BY tecnologia_terminales
+          ORDER BY COUNT(*) DESC
+      `),
+    /* numero de pdv por tecnologia
+      pool.request().query(`
+          SELECT
+            COALESCE(tecnologia_terminales, 'Sin datos') AS nombre,
+            SUM(CASE WHEN tipo_farmacia = 'Propia'     THEN COALESCE(num_puntos_venta, 0) ELSE 0 END) AS propias,
+            SUM(CASE WHEN tipo_farmacia = 'Franquicia' THEN COALESCE(num_puntos_venta, 0) ELSE 0 END) AS franquicias
+          FROM farmacia f
+          WHERE f.estado = 'A' ${whereExtra}
+          GROUP BY tecnologia_terminales
+          ORDER BY 
+            SUM(CASE WHEN tipo_farmacia = 'Propia'     THEN COALESCE(num_puntos_venta, 0) ELSE 0 END) +
+            SUM(CASE WHEN tipo_farmacia = 'Franquicia' THEN COALESCE(num_puntos_venta, 0) ELSE 0 END) DESC
+    `), */
   ]);
 
   const totalFarmacias = tipoFarmacia.recordset.reduce((acc: number, r: any) => acc + r.total, 0);
@@ -95,5 +139,7 @@ export const obtenerDatosDashboard = async (rol: string, cedula: string) => {
     ram: ram.recordset,
     virtualizador: virtualizador.recordset,
     num_puntos_venta: num_puntos_venta.recordset,
+    puntosVentaAgrupado: puntosVentaAgrupado.recordset,
+    // puntosVentaxTecnologia: puntosVentaxTecnologia.recordset,
   };
 };

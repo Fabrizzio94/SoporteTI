@@ -86,6 +86,7 @@ export const obtenerUltimoHistorico = async (
                 fecha_baja
             FROM historico_activo
             WHERE codigo_activo = @codigo_activo
+                AND tipo_baja IN ('MANUAL', 'Automatico)
             ORDER BY fecha_baja DESC
             `);
     return result.recordset[0] ?? null;
