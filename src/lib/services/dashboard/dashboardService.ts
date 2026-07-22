@@ -91,14 +91,6 @@ export const obtenerDatosDashboard = async (rol: string, cedula: string) => {
       HAVING SUM(COALESCE(num_puntos_venta, 0)) > 0  -- ← excluye los que suman 0
       ORDER BY total DESC
       `),
-    /* pool.request().query(`
-          SELECT
-            COALESCE(tecnologia_terminales, 'Sin datos') AS nombre,
-            SUM(COALESCE(num_puntos_venta,0)) AS total
-          FROM farmacia f WHERE f.estado = 'A' ${whereExtra}
-          GROUP BY tecnologia_terminales
-          ORDER BY total DESC
-    `), */
     pool.request().query(`
           SELECT
             COALESCE(tecnologia_terminales, 'Sin datos') AS nombre,

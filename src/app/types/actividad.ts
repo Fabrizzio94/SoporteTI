@@ -12,7 +12,16 @@ export type Actividad = {
   ano_compra?: number;
   codigo_reemplazo?: string;
   fecha_baja: string;
-  tipo_baja: "MANUAL" | "AUTO" | "REACTIVADO";
+  tipo_baja: TipoBaja;
   verificado: boolean;
   fecha_verificacion?: string;
 };
+
+export const TipoBaja = {
+  MANUAL: "MANUAL",
+  AUTOMATICO: "AUTOMATICO",
+  REACTIVADO_MANUAL: "REACTIVADO_MANUAL",
+  REACTIVADO_EXCEL: "REACTIVADO_EXCEL",
+} as const;
+
+export type TipoBaja = (typeof TipoBaja)[keyof typeof TipoBaja];

@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Actividad } from "@/app/types/actividad";
+import { Actividad, TipoBaja } from "@/app/types/actividad";
 
 type Props = {
   open: boolean;
@@ -30,6 +30,8 @@ export default function ActividadModal({
   const [codigoReemplazo, setCodigoReemplazo] = useState("");
   const [nuevaOficina, setNuevaOficina] = useState("");
   const [confirmarReactivar, setConfirmarReactivar] = useState(false);
+  // estado para listar historico activo
+  const [historico, setHistorico] = useState<Actividad[]>([]);
 
   useEffect(() => {
     if (actividad) {
@@ -40,7 +42,18 @@ export default function ActividadModal({
       setConfirmarReactivar(false);
     }
   }, [actividad, open]);
-
+  useEffect(() => {
+    if (!actividad) return;
+    const cargarHistorico = async () => {
+      const res = await fetch(
+        `/api/actividades/historico/${actividad.codigo_activo}`,
+      );
+      if (!res.ok) return;
+      setHistorico(await res.json());
+    };
+    cargarHistorico();
+    console.log(historico);
+  }, [actividad]);
   const handleGuardar = async () => {
     const loadingToast = toast.loading("Guardando cambios...");
     try {
@@ -93,7 +106,35 @@ export default function ActividadModal({
 
   const esFranquicia = actividad.tipo_farmacia === "Franquicia";
   const esVerificado = actividad.verificado;
-
+  // Otener titulo y colores para el historico linea de timepo
+  const obtenerTitulo = (h: Actividad) => {
+    switch (h.tipo_baja) {
+      case TipoBaja.MANUAL:
+        return h.verificado ? "Baja verificado" : "Baja registrada";
+      case TipoBaja.AUTOMATICO:
+        return "Baja automática";
+      case TipoBaja.REACTIVADO_MANUAL:
+        return "Reactivado manualmente";
+      case TipoBaja.REACTIVADO_EXCEL:
+        return "Reactivado por Excel";
+      default:
+        return "Evento";
+    }
+  };
+  const obtenerColor = (h: Actividad) => {
+    switch (h.tipo_baja) {
+      case TipoBaja.MANUAL:
+        return h.verificado ? "bg-emerald-400" : "bg-yellow-400";
+      case TipoBaja.AUTOMATICO:
+        return "bg-blue-400";
+      case TipoBaja.REACTIVADO_MANUAL:
+        return "bg-purple-400";
+      case TipoBaja.REACTIVADO_EXCEL:
+        return "bg-pink-400";
+      default:
+        return "bg-slate-400";
+    }
+  };
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-lg rounded-xl shadow-xl max-h-[90vh] flex flex-col">
@@ -234,37 +275,45 @@ export default function ActividadModal({
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2 pb-1.5 border-b border-slate-100">
               Historial del equipo
             </p>
+
             <div className="space-y-0">
-              {/* Registro actual */}
-              <div className="flex gap-2 items-start py-2 border-b border-slate-50">
-                <span
-                  className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${esVerificado ? "bg-emerald-400" : "bg-yellow-400"}`}
-                />
-                <div>
-                  <p className="text-xs font-semibold text-slate-700">
-                    {esVerificado ? "Baja verificada" : "Baja registrada"}
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    {new Date(actividad.fecha_baja).toLocaleDateString("es-EC")}{" "}
-                    · {actividad.motivo_baja}
-                    {actividad.fecha_verificacion &&
-                      ` · Verificado ${new Date(actividad.fecha_verificacion).toLocaleDateString("es-EC")}`}
-                  </p>
+              {historico.map((h) => (
+                <div
+                  key={h.id}
+                  className="flex gap-2 items-start py-2 border-b border-slate-50"
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${obtenerColor(h)}`}
+                  />
+
+                  <div>
+                    <p className="text-xs font-semibold text-slate-700">
+                      {obtenerTitulo(h)}
+                    </p>
+
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      {new Date(h.fecha_baja).toLocaleDateString("es-EC")}
+                      {" · "}
+                      {h.motivo_baja}
+                    </p>
+
+                    {h.observacion && (
+                      <p className="text-[10px] text-slate-500 italic mt-1">
+                        {h.observacion}
+                      </p>
+                    )}
+
+                    {h.fecha_verificacion && (
+                      <p className="text-[10px] text-emerald-600 mt-1">
+                        Verificado{" "}
+                        {new Date(h.fecha_verificacion).toLocaleDateString(
+                          "es-EC",
+                        )}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-              {/* Registro original activo */}
-              <div className="flex gap-2 items-start py-2">
-                <span className="w-2 h-2 rounded-full mt-1.5 shrink-0 bg-indigo-400" />
-                <div>
-                  <p className="text-xs font-semibold text-slate-700">
-                    Registro activo
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">
-                    {actividad.oficina} · {actividad.nombre_farmacia} · Año{" "}
-                    {actividad.ano_compra ?? "—"}
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 

@@ -6,46 +6,53 @@ import { Usuario } from "@/app/types/tecnico";
 import { Actividad } from "@/app/types/actividad";
 import ActividadModal from "@/app/components/actividades/ActividadModal";
 import { useDebounce } from "../hooks/useDebounce";
-
+import { TipoBaja } from "@/app/types/actividad";
 const FILAS_POR_PAGINA = 10;
 
 const badgeEstado = (a: Actividad) => {
-  if (a.tipo_baja === "REACTIVADO")
-    return (
-      <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
-        ↩ Reactivado
-      </span>
-    );
-
-  if (a.motivo_baja === "Reactivado — vuelve a aparecer en carga Excel")
-    return (
-      <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-pink-50 text-pink-700">
-        ↩ Reactivado Excel
-      </span>
-    );
   if (a.tipo_farmacia === "Franquicia")
     return (
       <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
         🏪 Franquicia
       </span>
     );
-  if (a.tipo_baja === "MANUAL" && a.verificado)
-    return (
-      <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
-        ✓ Verificado
-      </span>
-    );
-  if (a.tipo_baja === "MANUAL" && !a.verificado)
-    return (
-      <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700">
-        ⏳ Pendiente
-      </span>
-    );
-  return (
-    <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
-      ✓ Automatico
-    </span>
-  );
+
+  switch (a.tipo_baja) {
+    case TipoBaja.REACTIVADO_MANUAL:
+      return (
+        <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700">
+          ↩ Reactivado
+        </span>
+      );
+      break;
+    case TipoBaja.REACTIVADO_EXCEL:
+      return (
+        <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-pink-50 text-pink-700">
+          ↩ Reactivado Excel
+        </span>
+      );
+      break;
+    case TipoBaja.MANUAL:
+      return a.verificado ? (
+        <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">
+          ✓ Verificado
+        </span>
+      ) : (
+        <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700">
+          ⏳ Pendiente
+        </span>
+      );
+      break;
+    case TipoBaja.AUTOMATICO:
+      return (
+        <span className="inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+          ✓ Automatico
+        </span>
+      );
+      break;
+    default:
+      return null;
+  }
 };
 
 const badgeTipo = (a: Actividad) => (
@@ -56,7 +63,7 @@ const badgeTipo = (a: Actividad) => (
         : "bg-blue-50 text-blue-700"
     }`}
   >
-    ● {a.tipo_baja === "MANUAL" ? "Manual" : "Automatico"}
+    ● {a.tipo_baja === "MANUAL" ? "Manual" : "AUTOMATICO"}
   </span>
 );
 
@@ -255,8 +262,8 @@ export default function ActividadesPage() {
           <option value="">Estado: Todos</option>
           <option value="Verificado">Verificado</option>
           <option value="Pendiente">Pendiente</option>
-          <option value="Automatico">Automatico</option>
-          <option value="Reactivado">Reactivado</option>
+          <option value="AUTOMATICO">Automatico</option>
+          <option value="REACTIVADO_MANUAL">Reactivado</option>
         </select>
         <div className="flex items-center gap-1 text-xs text-slate-400">
           Desde
@@ -382,7 +389,7 @@ export default function ActividadesPage() {
                     {a.motivo_baja ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-slate-500 whitespace-nowrap">
-                    {a.nombre_tecnico ?? "Automatico"}
+                    {a.nombre_tecnico ?? "AUTOMATICO"}
                   </td>
                   <td className="px-4 py-3">
                     {a.codigo_reemplazo ? (
@@ -500,7 +507,11 @@ export default function ActividadesPage() {
           },
           {
             color: "bg-pink-400",
-            label: "Reactivado — equipo vuelve en Excel",
+            label: "Reactivado — registrado en Excel",
+          },
+          {
+            color: "bg-purple-400",
+            label: "Reactivado Manualmente",
           },
           {
             color: "bg-slate-300",

@@ -1,3 +1,4 @@
+import { TipoBaja } from "@/app/types/actividad";
 import type { ActualizarActivoExistenteParams } from "@/app/types/activo";
 import { obtenerBajaManualPendiente, obtenerUltimoHistorico } from "@/lib/helpers/excelHelpers";
 
@@ -58,7 +59,7 @@ export const actualizarActivoExistente = async ({
         resumen.actualizados++;
         return;
     }
-    if (historico.tipo_baja !== "Automatico") {
+    if (historico.tipo_baja !== TipoBaja.AUTOMATICO) {
         resumen.actualizados++;
         return;
     }
@@ -69,7 +70,7 @@ export const actualizarActivoExistente = async ({
         .input("cedula_tecnico", activoEnBD.cedula_tecnico ?? null)
         .input("nombre_tecnico", activoEnBD.nombre_tecnico ?? "Automático")
         .input("ano_compra", anoCompra ?? null)
-        .input("tipo_baja", "Automatico")
+        .input("tipo_baja", TipoBaja.REACTIVADO_EXCEL)
         .input("verificado", 1)
         .input("fecha_verificacion", new Date())
         .query(`

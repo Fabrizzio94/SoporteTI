@@ -3,6 +3,7 @@ import type { ConnectionPool } from "mssql"
 import type { ProcesarBajasParams } from "@/app/types/activo";
 
 import { ACTIVOS_PERMITIDOS, extraerCodigoAnterior, extraerAnoCompra } from "@/lib/helpers/excelHelpers";
+import { TipoBaja } from "@/app/types/actividad";
 
 
 
@@ -71,9 +72,9 @@ export const procesarBajas = async ({
                 .input("nombre_activo", activo.nombre_activo)
                 .input("oficina", activo.oficina)
                 .input("cedula_tecnico", activo.cedula_tecnico ?? null)
-                .input("nombre_tecnico", activo.nombre_tecnico ?? "Automático")
+                .input("nombre_tecnico", activo.nombre_tecnico ?? TipoBaja.AUTOMATICO)
                 .input("ano_compra", activo.ano_compra ?? null)
-                .input("tipo_baja", "Automatico")
+                .input("tipo_baja", TipoBaja.AUTOMATICO)
                 .input("verificado", 1)
                 .input("fecha_verificacion", new Date())
                 .query(`

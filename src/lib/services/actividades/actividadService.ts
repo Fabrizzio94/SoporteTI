@@ -1,5 +1,5 @@
 import { getConnection } from "@/lib/db";
-import { Actividad } from "@/app/types/actividad";
+import { TipoBaja } from "@/app/types/actividad";
 type FiltrosActividades = {
   rol: string;
   cedula: string;
@@ -61,10 +61,10 @@ export const obtenerActividades = async (filtros: FiltrosActividades) => {
     case "Pendiente":
       conditions.push("h.verificado = 0 AND h.tipo_baja = 'MANUAL'");
       break;
-    case "Automatico":
+    case TipoBaja.AUTOMATICO:
       conditions.push("h.tipo_baja = 'Automatico'");
       break;
-    case "Reactivado":
+    case TipoBaja.REACTIVADO_MANUAL:
       conditions.push("h.motivo_baja LIKE '%Reactivado%'");
       break;
   }
@@ -163,7 +163,7 @@ export const reactivarActividad = async (data: {
         SET
             verificado = 1,
             fecha_verificacion = GETDATE(),
-            observacion = CONCAT(COALESCE(observacion,''), + ' | Verificado por reactivación manual')
+            observacion = CONCAT(COALESCE(observacion,''), ' | Verificado por reactivación manual')
         WHERE codigo_activo = @codigo_activo
           AND tipo_baja = 'MANUAL'
           AND verificado = 0
@@ -177,7 +177,7 @@ export const reactivarActividad = async (data: {
     .input("ano_compra", hist.ano_compra ?? null)
     .input("motivo_baja", data.nueva_oficina ? "Reactivado y Reasignado a otra farmacia" : "Reactivado")
     .input("observacion", data.observacion ?? null)
-    .input("tipo_baja", "REACTIVADO")
+    .input("tipo_baja", TipoBaja.REACTIVADO_MANUAL)
     .query(`
       INSERT INTO historico_activo (
         codigo_activo, nombre_activo, oficina, cedula_tecnico,
@@ -189,27 +189,5 @@ export const reactivarActividad = async (data: {
         @tipo_baja
       )
     `);
-  /* await pool.request()
-    .input("codigo_activo", hist.codigo_activo)
-    .input("nombre_activo", hist.nombre_activo)
-    .input("oficina", data.nueva_oficina ?? hist.oficina)
-    .input("cedula_tecnico", hist.cedula_tecnico ?? null)
-    .input("nombre_tecnico", hist.nombre_tecnico ?? null)
-    .input("ano_compra", hist.ano_compra ?? null)
-    .input("motivo_baja", data.nueva_oficina ? "Reasignado a otra farmacia" : "Reactivado")
-    .input("observacion", data.observacion ?? null)
-    .input("tipo_baja", "REACTIVADO")
-    .query(`
-      INSERT INTO historico_activo (
-        codigo_activo, nombre_activo, oficina, cedula_tecnico,
-        nombre_tecnico, ano_compra, motivo_baja, observacion,
-        tipo_baja
-      ) VALUES (
-        @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
-        @nombre_tecnico, @ano_compra, @motivo_baja, @observacion,
-        @tipo_baja
-      )
-    `); */
-
   return { ok: true, accion: "reactivado" };
 };
