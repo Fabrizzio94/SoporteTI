@@ -17,12 +17,13 @@ export const procesarFilaExcel = async ({
 
     const codigoActivo = row["Activo fijo"]?.toString().trim();
     const nombreActivo = row["Nombre Activo"]?.toString().trim().toUpperCase();
-    const centroCosto = row["Centro Costo Origen"]?.toString().trim().toUpperCase();
+    const centroCosto = row["Centro de coste"]?.toString().trim();
+    const centroCostoOrigen = row["Centro Costo Origen"]?.toString().trim().toUpperCase();
     const fechaAlta = row["Fecha de Alta"];
     const detalle = row["Detalle"]?.toString().trim() ?? null;
     const nombreCustodio = row["Nombre Custodio"]?.toString().trim() ?? null;
 
-    if (!codigoActivo || !nombreActivo || !centroCosto) return;
+    if (!codigoActivo || !nombreActivo || !centroCostoOrigen) return;
 
     codigosEnExcel.add(codigoActivo);
 
@@ -41,8 +42,8 @@ export const procesarFilaExcel = async ({
         ? fechaAlta.getFullYear()
         : fechaAlta ? new Date(fechaAlta).getFullYear() : null;
 
-    const farmacia = farmacias.find((f: any) => f.nombre.toUpperCase() === centroCosto);
-    const esContactCenter = centroCosto === "CONTACT CENTER OPERATIVO";
+    const farmacia = farmacias.find((f: any) => f.nombre.toUpperCase() === centroCostoOrigen);
+    const esContactCenter = centroCostoOrigen === "CONTACT CENTER OPERATIVO";
 
     if (esContactCenter) {
         await procesarCC({
@@ -59,7 +60,7 @@ export const procesarFilaExcel = async ({
     }
     if (!farmacia) {
         resumen.sin_farmacia.push(
-            `${codigoActivo} - ${centroCosto}`
+            `${codigoActivo} - ${centroCostoOrigen}`
         );
         return;
     };

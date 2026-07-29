@@ -1,35 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Activo } from "../types/activo";
-
-type MiActivo = Pick<
-  Activo,
-  | "codigo_activo"
-  | "nombre_activo"
-  | "ano_compra"
-  | "estado"
-  | "nombre_custodio"
-  | "nombre_farmacia"
->;
+import { useEffect, useMemo, useState } from "react";
+import { MiActivo } from "../types/activo";
+import MisActivosTable from "../components/activos/MisActivosTable";
+import FarmaciaSelect from "../components/farmacias/FarmaciasSelect";
+import MisActivoModal from "../components/activos/MisActivosModal";
+import { FarmaciaListado } from "../types/farmacia";
 
 export default function MisActivosPage() {
   const [activos, setActivos] = useState<MiActivo[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    fetch("/api/activos/misactivos")
-      .then((r) => r.json())
-      .then((d) => setActivos(Array.isArray(d) ? d : []))
-      .finally(() => setLoading(false));
-  }, []);
-
-  const filtered = activos.filter(
-    (a) =>
-      a.codigo_activo.toLowerCase().includes(search.toLowerCase()) ||
-      a.nombre_activo.toLowerCase().includes(search.toLowerCase()),
+  const [modalOpen, setModalOpen] = useState(false);
+  const [activoSeleccionado, setActivoSeleccionado] = useState<MiActivo | null>(
+    null,
   );
+  const [farmacias, setFarmacias] = useState<FarmaciaListado[]>([]);
+  useEffect(() => {
+    cargarMisActivos();
+    cargarTodasFarmacias();
+  }, []);
+  const cargarTodasFarmacias = async () => {
+    const res = await fetch("/api/farmacias/listar");
+    const data = await res.json();
+    setFarmacias(data);
+  };
+  const cargarMisActivos = async () => {
+    setLoading(true);
+    const res = await fetch("/api/activos/misactivos");
+    const data = await res.json();
+
+    setActivos(Array.isArray(data) ? data : []);
+    setLoading(false);
+  };
+  const filtered = useMemo(() => {
+    return activos.filter(
+      (a) =>
+        a.codigo_activo.toLowerCase().includes(search.toLowerCase()) ||
+        a.nombre_activo.toLowerCase().includes(search.toLowerCase()),
+    );
+  }, [activos, search]);
+  const abrirEditar = (activo: MiActivo) => {
+    setActivoSeleccionado(activo);
+    setModalOpen(true);
+  };
 
   return (
     <main className="p-6">
@@ -41,7 +55,7 @@ export default function MisActivosPage() {
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Buscar por código, nombre o farmacia..."
+          placeholder="Buscar por código (1400012345)"
           className="w-full max-w-sm border border-slate-200 rounded-md px-3 py-2 text-sm outline-none focus:border-indigo-400"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -49,86 +63,18 @@ export default function MisActivosPage() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                N°
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Código
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Nombre Activo
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Centro Costo Origen
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Fecha Alta
-              </th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Estado
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {loading ? (
-              [...Array(8)].map((_, i) => (
-                <tr key={i}>
-                  {[...Array(5)].map((_, j) => (
-                    <td key={j} className="px-4 py-3">
-                      <div className="h-4 bg-slate-100 rounded animate-pulse" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="px-4 py-8 text-center text-slate-400"
-                >
-                  No se encontraron activos asignados
-                </td>
-              </tr>
-            ) : (
-              filtered.map((a, index) => (
-                <tr key={a.codigo_activo} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-mono text-xs text-slate-600">
-                    {index + 1}
-                  </td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-600">
-                    {a.codigo_activo}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">
-                    {a.nombre_activo}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {a.nombre_farmacia ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {a.ano_compra ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        a.estado === "A"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {a.estado === "A" ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
+      <MisActivosTable
+        activos={filtered}
+        loading={loading}
+        onEdit={abrirEditar}
+      />
+      <MisActivoModal
+        open={modalOpen}
+        activo={activoSeleccionado}
+        farmacias={farmacias}
+        onClose={() => setModalOpen(false)}
+        onSaved={cargarMisActivos}
+      />
       {/* Total */}
       {!loading && (
         <p className="text-xs text-slate-400 mt-3">

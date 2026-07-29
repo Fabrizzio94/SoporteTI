@@ -51,8 +51,12 @@ export default function FarmaciaSelect({
         placeholder={placeholder}
         onFocus={() => setOpen(true)}
         onChange={(e) => {
-          setSearch(e.target.value);
+          const texto = e.target.value;
+          setSearch(texto);
           setOpen(true);
+          if (texto.trim() === "") {
+            onChange("");
+          }
         }}
       />
 

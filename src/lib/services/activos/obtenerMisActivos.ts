@@ -23,12 +23,36 @@ export const obtenerMisActivos = async (cedula: string) => {
         a.ano_compra,
         a.estado,
         a.nombre_custodio,
-        COALESCE(f.nombre, 'CONTACT CENTER OPERATIVO') AS nombre_farmacia
+        COALESCE(f.nombre, 'CONTACT CENTER OPERATIVO') AS nombre_farmacia,
+        a.cedula_tecnico,
+        a.nombre_custodio,
+        a.descripcion
       FROM activo a
       LEFT JOIN farmacia f ON f.oficina = a.oficina
-      WHERE UPPER(TRIM(a.nombre_custodio)) = @nombre_custodio
+      WHERE UPPER(TRIM(a.nombre_custodio)) = @nombre_custodio AND a.oficina is null
       ORDER BY a.nombre_activo
     `);
 
   return result.recordset;
+};
+
+export const asignarMisActivos = async (data: {
+  codigo_activo: string,
+  oficina: string;
+}) => {
+  const pool = await getConnection();
+
+  await pool.request()
+    .input("codigo_activo", data.codigo_activo)
+    .input("oficina", data.oficina)
+    .query(`
+      UPDATE activo 
+      SET 
+        oficina = @oficina,
+        control_importacion = 1,
+        nombre_custodio = 'TODO EL PERSONAL DEL PDV'
+      WHERE codigo_activo = @codigo_activo
+    `);
+
+  return { ok: true };
 };

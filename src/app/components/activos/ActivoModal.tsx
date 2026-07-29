@@ -283,18 +283,6 @@ export default function ActivoModal({
                     value={oficina}
                     onChange={setOficina}
                   />
-                  {/* <select
-                    className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
-                    value={oficina}
-                    onChange={(e) => setOficina(e.target.value)}
-                  >
-                    <option value="">Seleccionar...</option>
-                    {farmacias.map((f) => (
-                      <option key={f.oficina} value={f.oficina}>
-                        {f.nombre}
-                      </option>
-                    ))}
-                  </select> */}
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 font-medium block mb-1">

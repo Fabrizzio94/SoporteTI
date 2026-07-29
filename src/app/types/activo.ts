@@ -91,3 +91,13 @@ export interface InsertarActivoNuevoParams {
     nombreCustodio: string | null;
     resumen: ResumenImportacion;
 }
+
+export type MiActivo = {
+    codigo_activo: string;
+    nombre_activo: string;
+    oficina: string | null;
+    nombre_farmacia?: string;
+    nombre_custodio?: string | null;
+    ano_compra: number | null;
+    estado: string;
+};
