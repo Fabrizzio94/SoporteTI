@@ -1,4 +1,5 @@
 import { getConnection } from "@/lib/db";
+import { obtenerCentroCosto } from "./activoService";
 export const obtenerMisActivos = async (cedula: string) => {
   const pool = await getConnection();
 
@@ -41,16 +42,18 @@ export const asignarMisActivos = async (data: {
   oficina: string;
 }) => {
   const pool = await getConnection();
-
+  const centroCosto = await obtenerCentroCosto(data.oficina);
   await pool.request()
     .input("codigo_activo", data.codigo_activo)
     .input("oficina", data.oficina)
+    .input("centro_costo", centroCosto)
     .query(`
       UPDATE activo 
       SET 
         oficina = @oficina,
         control_importacion = 1,
-        nombre_custodio = 'TODO EL PERSONAL DEL PDV'
+        nombre_custodio = 'TODO EL PERSONAL DEL PDV',
+        centro_costo = @centro_costo
       WHERE codigo_activo = @codigo_activo
     `);
 
