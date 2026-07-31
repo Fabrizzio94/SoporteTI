@@ -57,6 +57,9 @@ export default function ActivosTable({ activos, onEdit }: Props) {
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-600">
                   {a.nombre_farmacia}
+                  <p className="text-xs text-red-700">
+                    {a.centro_costo ?? "—"}
+                  </p>
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-600">
                   {a.nombre_tecnico ?? "—"}

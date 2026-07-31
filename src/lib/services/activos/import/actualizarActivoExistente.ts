@@ -27,6 +27,7 @@ export const actualizarActivoExistente = async ({
         .input("oficina", farmacia.oficina)
         .input("cedula_tecnico", farmacia.cedula_tecnico ?? null)
         .input("nombre_custodio", nombreCustodio)
+        .input("centro_costo", farmacia.centro_costo)
         .query(`
           UPDATE activo 
           SET
@@ -35,6 +36,7 @@ export const actualizarActivoExistente = async ({
             oficina       = @oficina,
             cedula_tecnico= @cedula_tecnico,
             nombre_custodio=@nombre_custodio,
+            centro_costo  = @centro_costo,
             estado        = 'A'
           WHERE codigo_activo = @codigo_activo
         `);

@@ -311,6 +311,7 @@ export default function ActivosPage() {
             {[
               "Nombre Activo",
               "Activo Fijo",
+              "Centro Costo",
               "Centro Costo Origen",
               "Fecha de Alta",
               "Detalle",

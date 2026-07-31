@@ -10,6 +10,7 @@ export interface Farmacia {
   tipo_rack: string;
   cedula_tecnico: string;
   fecha_sync?: string | null;
+  centro_costo?: string | null;
   // relacion opcional para joins
   nombre_tecnico?: string;
   //campos del join de tabla activos

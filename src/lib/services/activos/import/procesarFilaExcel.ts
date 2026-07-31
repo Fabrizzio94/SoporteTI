@@ -12,6 +12,7 @@ export const procesarFilaExcel = async ({
     farmacias,
     activosEnBD,
     codigosEnExcel,
+    farmaciasPorCentroCosto,
     resumen
 }: ProcesarFilaParams) => {
 
@@ -23,7 +24,7 @@ export const procesarFilaExcel = async ({
     const detalle = row["Detalle"]?.toString().trim() ?? null;
     const nombreCustodio = row["Nombre Custodio"]?.toString().trim() ?? null;
 
-    if (!codigoActivo || !nombreActivo || !centroCostoOrigen) return;
+    if (!codigoActivo || !nombreActivo || !centroCosto) return;
 
     codigosEnExcel.add(codigoActivo);
 
@@ -42,8 +43,9 @@ export const procesarFilaExcel = async ({
         ? fechaAlta.getFullYear()
         : fechaAlta ? new Date(fechaAlta).getFullYear() : null;
 
-    const farmacia = farmacias.find((f: any) => f.nombre.toUpperCase() === centroCostoOrigen);
-    const esContactCenter = centroCostoOrigen === "CONTACT CENTER OPERATIVO";
+    //const farmacia = farmacias.find((f: any) => f.nombre.toUpperCase() === centroCostoOrigen);
+    const farmacia = farmaciasPorCentroCosto.get(centroCosto);
+    const esContactCenter = centroCosto === "1102901600";
 
     if (esContactCenter) {
         await procesarCC({
@@ -82,6 +84,7 @@ export const procesarFilaExcel = async ({
             farmacia,
             activoEnBD,
             nombreCustodio,
+            farmaciasPorCentroCosto,
             resumen,
         });
     } else {

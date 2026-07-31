@@ -1,9 +1,10 @@
-import { getConnection, getMatrizConnection } from "@/lib/db";
+import { getConnection, getMatrizConnection, getBDgeneralConnection } from "@/lib/db";
 import { NextResponse } from "next/server";
 
 export const procesarSync = async () => {
   const poolMatriz = await getMatrizConnection();
   const poolLocal = await getConnection();
+  const poolBdgeneral = await getBDgeneralConnection();
   const mssql = require('mssql');
   /* const resultMatriz = await poolMatriz.request().query(`
     SELECT 
@@ -29,7 +30,7 @@ export const procesarSync = async () => {
     WHERE OFI.ESTADO = 'A'
   `);  */
   const resultMatriz = await poolMatriz.request().query(
-  `SELECT 
+    `SELECT 
       OFI.OFICINA   AS OFICINA,
       OFI.NOMBRE    AS FARMACIA,
       AT.tec_cedula AS CEDULA_TECNICO,
@@ -66,22 +67,35 @@ export const procesarSync = async () => {
   FROM [dbo].[SP_PAR_Tecnicos] AS AT
   INNER JOIN EasySeguridad.dbo.usuarios AS US ON US.cedula = AT.tec_cedula
   WHERE AT.tec_cedula = '1002166401'`
-);
+  );
+  // consulta a bdgeneral para obtener centrode costos
+  const resultCentroCostos = await poolBdgeneral.request().query(
+    `SELECT CODIGO_CENTRO_COSTO,CODIGO_OFICINA
+        FROM [dbo].[CENTROS_COSTOS]`
+  );
+  // Indice en memoria: Oficina -> Centro de Costo.
+  // Permite busquedads O(1) durante la sincronizacion evitando recorrer toda la lista
+  const centros = new Map(
+    resultCentroCostos.recordset.map(r => [
+      String(r.CODIGO_OFICINA),
+      String(r.CODIGO_CENTRO_COSTO),
+    ])
+  );
   const listaMatriz = resultMatriz.recordset;
   const tecnicosProcesados = new Set<string>();
   for (const f of listaMatriz) {
     // ── TÉCNICOS ─────────────────────────────────────────────
     try {
-    if (f.CEDULA_TECNICO && !tecnicosProcesados.has(f.CEDULA_TECNICO)) {
-      tecnicosProcesados.add(String(f.CEDULA_TECNICO));
+      if (f.CEDULA_TECNICO && !tecnicosProcesados.has(f.CEDULA_TECNICO)) {
+        tecnicosProcesados.add(String(f.CEDULA_TECNICO));
 
-      await poolLocal.request()
-        .input("cedula", mssql.NVarChar(10), String(f.CEDULA_TECNICO))
-        .input("nombres", f.NOMBRES)
-        .input("apellidos", f.APELLIDOS)
-        .input("usuario", f.USUARIO ?? null)
-        .input("password", f.PASSWORD)
-        .query(`
+        await poolLocal.request()
+          .input("cedula", mssql.NVarChar(10), String(f.CEDULA_TECNICO))
+          .input("nombres", f.NOMBRES)
+          .input("apellidos", f.APELLIDOS)
+          .input("usuario", f.USUARIO ?? null)
+          .input("password", f.PASSWORD)
+          .query(`
           IF NOT EXISTS (SELECT 1 FROM tecnicos WHERE cedula = @cedula)
           BEGIN
             INSERT INTO tecnicos (cedula, nombres, apellidos, estado, rol, usuario, password)
@@ -94,18 +108,26 @@ export const procesarSync = async () => {
             WHERE cedula = @cedula
           END
         `);
-    }
-    
-
-    // ── FARMACIAS ─────────────────────────────────────────────
-    if(f.OFICINA !== '9999') {
-      await poolLocal.request()
-        .input("oficina", mssql.NVarChar(20), String(f.OFICINA))
-        .input("nombre", f.FARMACIA)
-        .input("cedula_tecnico", mssql.NVarChar(20), String(f.CEDULA_TECNICO))
-        .input("tipo", f.FRANQUICIA === "S" ? "Franquicia" : "Propia")
-        .input("marca", f.SUCURSAL)
-        .query(`
+      }
+      // ── FARMACIAS ─────────────────────────────────────────────
+      // para cada farmacia obtenida desde matriz, busca su centro de costo por oficina
+      // y actualiza/inserta la información en la base local SoporteTI
+      const centroCosto = centros.get(String(f.OFICINA)) ?? null;
+      if (centroCosto && !/^\d+$/.test(String(centroCosto))) {
+        console.log("Centro costo inválido:", {
+          oficina: f.OFICINA,
+          centroCosto,
+        });
+      }
+      if (f.OFICINA !== '9999') {
+        await poolLocal.request()
+          .input("oficina", mssql.NVarChar(20), String(f.OFICINA))
+          .input("nombre", f.FARMACIA)
+          .input("cedula_tecnico", mssql.NVarChar(20), String(f.CEDULA_TECNICO))
+          .input("tipo", f.FRANQUICIA === "S" ? "Franquicia" : "Propia")
+          .input("marca", f.SUCURSAL)
+          .input("centro_costo", centroCosto)
+          .query(`
           MERGE INTO farmacia AS Destino
           USING (SELECT @oficina AS oficina) AS Origen
             ON Destino.oficina = Origen.oficina
@@ -115,20 +137,20 @@ export const procesarSync = async () => {
               cedula_tecnico = @cedula_tecnico,
               tipo_farmacia  = @tipo,
               estado         = 'A',
-              fecha_sync     = GETDATE()
+              fecha_sync     = GETDATE(),
+              centro_costo = @centro_costo
           WHEN NOT MATCHED THEN
-            INSERT (oficina, nombre, cedula_tecnico, tipo_farmacia, marca, estado, fecha_sync)
-            VALUES (@oficina, @nombre, @cedula_tecnico, @tipo, @marca, 'A', GETDATE());
+            INSERT (oficina, nombre, cedula_tecnico, tipo_farmacia, marca, estado, fecha_sync,centro_costo)
+            VALUES (@oficina, @nombre, @cedula_tecnico, @tipo, @marca, 'A', GETDATE(), @centro_costo);
         `);
-        }
-        }catch(err){
+      }
+    } catch (err) {
       console.error('ERROR en registro:', JSON.stringify(f));
       console.error('Detalle error:', err);
-    throw err;
+      throw err;
     }
   }
   // --- INACTIVAR TECNICOS que ya no vienen de matriz ---------
-  //const cedulas = Array.from(tecnicosProcesados).join(",");
   const cedulas = Array.from(tecnicosProcesados).map(c => `'${c}'`).join(",");
   if (cedulas.length === 0) {
     return NextResponse.json({ error: "Sin datos de matriz, sync abortado" }, { status: 500 });

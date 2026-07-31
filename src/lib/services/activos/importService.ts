@@ -1,10 +1,4 @@
-import sql from "mssql";
 import { getConnection } from "@/lib/db";
-import {
-    ACTIVOS_PERMITIDOS,
-    extraerCodigoAnterior,
-    extraerAnoCompra,
-} from "@/lib/helpers/excelHelpers";
 import { procesarFilaExcel } from "./import/procesarFilaExcel";
 import { procesarBajas } from "./import/procesarBajas";
 import { obtenerActivosBD } from "./import/obtenerActivosBD";
@@ -28,7 +22,11 @@ export const procesarImportExcel = async (
     };
 
     const codigosEnExcel = new Set<string>();
-
+    const farmaciasPorCentroCosto = new Map(
+        farmacias
+            .filter((f) => f.centro_costo)
+            .map(f => [f.centro_costo!, f])
+    );
     for (const row of rows) {
         await procesarFilaExcel({
             pool,
@@ -36,6 +34,7 @@ export const procesarImportExcel = async (
             farmacias,
             activosEnBD,
             codigosEnExcel,
+            farmaciasPorCentroCosto,
             resumen,
         });
     }

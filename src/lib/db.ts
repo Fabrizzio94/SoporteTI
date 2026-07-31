@@ -13,7 +13,8 @@ const config: sql.config = {
 };
 
 let pool: sql.ConnectionPool | null = null;
-
+let matrizPool: sql.ConnectionPool | null = null;
+let bdGeneralPool: sql.ConnectionPool | null = null;
 export async function getConnection() {
   if (!pool) {
     pool = await sql.connect(config);
@@ -21,7 +22,7 @@ export async function getConnection() {
   return pool;
 }
 
-let matrizPool: sql.ConnectionPool | null = null;
+
 
 export async function getMatrizConnection() {
   if (matrizPool?.connected) return matrizPool;
@@ -50,6 +51,28 @@ export async function getMatrizConnection() {
     return matrizPool;
   } catch (err) {
     console.error("Error en conexión Matriz:", err);
+    throw err;
+  }
+
+}
+export async function getBDgeneralConnection() {
+  if (bdGeneralPool?.connected) return bdGeneralPool;
+  const connectionString =
+    `Driver={ODBC Driver 17 for SQL Server};` +
+    `Server=${process.env.MATRIZ_SRV10!};` +
+    `Database=${process.env.MATRIZ_SRV10_NAME!};` +
+    `UID=${process.env.MATRIZ_USER};` +
+    `PWD=${process.env.MATRIZ_SRV10_PASSWORD};` +
+    `TrustServerCertificate=yes;`;
+
+
+  try {
+    // Creamos el pool indicando que use el driver de Windows
+    bdGeneralPool = new sql.ConnectionPool(connectionString);
+    await bdGeneralPool.connect();
+    return bdGeneralPool;
+  } catch (err) {
+    console.error("Error en conexión Bd general:", err);
     throw err;
   }
 

@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     const pool = await getConnection();
     const farmaciasResult = await pool.request().query(`
-      SELECT oficina, nombre, tipo_farmacia, cedula_tecnico FROM farmacia WHERE estado = 'A'
+      SELECT oficina, nombre, tipo_farmacia, cedula_tecnico, centro_costo FROM farmacia WHERE estado = 'A'
     `);
 
     const resumen = await procesarImportExcel(rows, farmaciasResult.recordset);

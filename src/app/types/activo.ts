@@ -11,6 +11,7 @@ export type Activo = {
     cedula_tecnico?: string | null;
     nombre_tecnico?: string | null;
     marca_farmacia?: string | null;
+    centro_costo?: string | null;
     // Datos servidor (solo si nombre_activo = 'CPU')
     virtualizer?: string | null;
     ram?: number | null;
@@ -35,6 +36,7 @@ export interface ProcesarFilaParams {
     farmacias: Farmacia[];
     activosEnBD: Map<string, any>;
     codigosEnExcel: Set<string>;
+    farmaciasPorCentroCosto: Map<string, any>;
     resumen: ResumenImportacion;
 }
 
@@ -78,6 +80,7 @@ export interface ActualizarActivoExistenteParams {
     farmacia: Farmacia;
     activoEnBD: any;
     nombreCustodio: string | null;
+    farmaciasPorCentroCosto: Map<string, string>;
     resumen: ResumenImportacion;
 }
 export interface InsertarActivoNuevoParams {

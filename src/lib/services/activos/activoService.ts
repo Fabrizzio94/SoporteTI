@@ -71,7 +71,8 @@ export const obtenerActivos = async (rol: string, cedula: string,
         s.virtualizer,
         s.ram,
         s.tipo_ram,
-        s.so_servidor
+        s.so_servidor,
+        a.centro_costo
       FROM activo a
       INNER JOIN farmacia f ON f.oficina = a.oficina
       LEFT JOIN tecnicos t  ON t.cedula  = f.cedula_tecnico
@@ -99,18 +100,19 @@ export const crearActivo = async (data: Pick<Activo,
   "codigo_activo" | "nombre_activo" | "ano_compra" | "descripcion"
   | "oficina" | "virtualizer" | "ram" | "tipo_ram" | "so_servidor">) => {
   const pool = await getConnection();
-
+  const centroCosto = await obtenerCentroCosto(data.oficina);
   await pool.request()
     .input("codigo_activo", data.codigo_activo)
     .input("nombre_activo", data.nombre_activo)
     .input("ano_compra", data.ano_compra ?? null)
     .input("descripcion", data.descripcion ?? null)
     .input("oficina", data.oficina)
+    .input("centro_costo", centroCosto)
     .query(`
     IF NOT EXISTS (SELECT 1 FROM activo WHERE codigo_activo = @codigo_activo)
     BEGIN
-      INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina, control_importacion)
-      VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina,0)
+      INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina, control_importacion, centro_costo)
+      VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina,0, @centro_costo)
     END
   `);
 
@@ -137,19 +139,21 @@ export const actualizarActivo = async (data: Pick<Activo,
   "codigo_activo" | "nombre_activo" | "ano_compra" | "descripcion"
   | "oficina" | "virtualizer" | "ram" | "tipo_ram" | "so_servidor" | "es_principal">) => {
   const pool = await getConnection();
-
+  const centroCosto = await obtenerCentroCosto(data.oficina);
   await pool.request()
     .input("codigo_activo", data.codigo_activo)
     .input("nombre_activo", data.nombre_activo)
     .input("ano_compra", data.ano_compra ?? null)
     .input("descripcion", data.descripcion ?? null)
     .input("oficina", data.oficina)
+    .input("centro_costo", centroCosto)
     .query(`
       UPDATE activo SET
         nombre_activo = @nombre_activo,
         ano_compra    = @ano_compra,
         descripcion   = @descripcion,
-        oficina       = @oficina
+        oficina       = @oficina,
+        centro_costo  = @centro_costo
       WHERE codigo_activo = @codigo_activo
     `);
 
@@ -202,4 +206,16 @@ export const verificarCodigoActivo = async (codigo: string) => {
   return { existe: result.recordset.length > 0 };
 }
 
-
+export const obtenerCentroCosto = async (
+  oficina: string
+) => {
+  const pool = await getConnection();
+  const result = await pool.request()
+    .input("oficina", oficina)
+    .query(`
+      SELECT centro_costo
+      FROM farmacia
+      WHERE oficina = @oficina
+      `);
+  return result.recordset[0]?.centro_costo ?? null;
+}
