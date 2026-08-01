@@ -164,3 +164,73 @@ export const obtenerFarmaciasListado = async (
 
   return result.recordset;
 };
+
+export const obtenerFarmaciasParaExportar = async () => {
+  const pool = await getConnection();
+  const request = pool.request();
+
+  /* const orderBy = filtros.tecnico
+    ? "ORDER BY f.nombre ASC"
+    : "ORDER BY t.apellidos ASC, t.nombres ASC";
+
+  let whereClause = "";
+  if (rol === "TECNICO") {
+    request.input("cedula_sesion", cedula);
+    whereClause += " WHERE f.cedula_tecnico = @cedula_sesion";
+  }
+  if (filtros.search) {
+    request.input("search", `%${filtros.search}%`);
+    whereClause += whereClause ? " AND" : " WHERE";
+    whereClause += ` (f.nombre LIKE @search OR f.oficina LIKE @search OR t.apellidos + ' ' + t.nombres LIKE @search OR f.marca LIKE @search)`;
+  }
+  if (filtros.estado) {
+    request.input("estado", filtros.estado);
+    whereClause += whereClause ? " AND" : " WHERE";
+    whereClause += " f.estado = @estado";
+  }
+  if (filtros.tecnico) {
+    request.input("tecnico", filtros.tecnico);
+    whereClause += whereClause ? " AND" : " WHERE";
+    whereClause += " t.apellidos + ' ' + t.nombres = @tecnico";
+  } */
+
+  const result = await request.query(`
+    SELECT
+      f.oficina,
+      f.nombre,
+      t.apellidos + ' ' + t.nombres AS nombre_tecnico,
+      f.tipo_farmacia,
+      f.marca,
+      srv.codigo_activo,
+      srv.ano_compra,
+      srv.so_servidor,
+      srv.tipo_ram,
+      srv.ram,
+      f.tecnologia_terminales,
+      f.ssoo_terminales,
+      srv.virtualizer,
+      f.num_puntos_venta,
+      f.tipo_rack
+    FROM farmacia f
+    LEFT JOIN tecnicos t ON t.cedula = f.cedula_tecnico
+    OUTER APPLY (
+      SELECT TOP 1
+        a.codigo_activo,
+        a.ano_compra,
+        s.so_servidor,
+        s.tipo_ram,
+        s.ram,
+        s.virtualizer
+      FROM activo a
+      INNER JOIN servidor s ON s.codigo_activo = a.codigo_activo
+      WHERE a.oficina = f.oficina
+        AND a.nombre_activo = 'CPU'
+        AND a.estado = 'A'
+      ORDER BY s.es_principal DESC, a.ano_compra DESC
+    ) AS srv
+     WHERE f.estado = 'A'
+     ORDER BY t.apellidos ASC, t.nombres ASC
+  `);
+
+  return result.recordset;
+};

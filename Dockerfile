@@ -30,10 +30,11 @@ FROM node:22-alpine AS runner
 WORKDIR /app
 
 # msnodesqlv8 necesita unixodbc-dev en ejecución para conectarse a SQL Server
-RUN apk add --no-cache unixodbc-dev
+RUN apk add --no-cache unixodbc-dev tzdata
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV TZ=America/Guayaquil
 
 # Crear usuario de seguridad para no usar root
 RUN addgroup --system --gid 1001 nodejs

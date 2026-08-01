@@ -5,7 +5,7 @@ import { Farmacia } from "@/app/types/farmacia";
 import { useState, useEffect, useRef, useCallback } from "react";
 import FarmaciasTable from "../components/farmacias/FarmaciasTable";
 import { useSession } from "next-auth/react";
-import { RefreshCcw } from "lucide-react"; // para iconos svg refresh
+import { RefreshCcw, FileSpreadsheet } from "lucide-react"; // para iconos svg refresh
 import toast from "react-hot-toast";
 import { useDebounce } from "../hooks/useDebounce";
 export default function FarmaciasPage() {
@@ -38,7 +38,8 @@ export default function FarmaciasPage() {
   const [conteoPorTecnico, setConteoPorTecnico] = useState<
     { tecnico: string; total: number }[]
   >([]);
-
+  const [isExportando, setIsExportando] = useState(false);
+  //************************************************************************ */
   const refreshData = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
@@ -88,6 +89,9 @@ export default function FarmaciasPage() {
       setHabilitarBoton(false);
     }
   };
+  const handlerExportar = useCallback(() => {
+    window.location.href = "/api/farmacias/exportar";
+  }, []);
   useEffect(() => {
     refreshData();
   }, [refreshData]);
@@ -115,108 +119,130 @@ export default function FarmaciasPage() {
   return (
     <main className="p-6">
       <h1 className="text-2xl font-semibold mb-4">Farmacias</h1>
-      <div className="justify-between bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm mb-4 flex items-center gap-2 flex-wrap">
+
+      <div className="bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm mb-4 flex items-center gap-2">
+        {/* BLOQUE IZQUIERDO: envuelve internamente, nunca desplaza al derecho */}
         <FarmaciasSearch onSearch={setSearch} className="wd-32 md:w-48" />
-        {/* Contador — antes de FarmaciasTable */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-2 flex-1 min-w-0">
+          <div className="flex flex-wrap items-center gap-3">
+            {user?.role === "COORDINADOR" && (
+              <span className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-medium">
+                Total: <b>{conteoTotal}</b> farmacia
+                {conteoTotal !== 1 ? "s" : ""}
+              </span>
+            )}
+            <div className="w-px h-6 bg-slate-200" />
+            <span className="text-sm bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full font-medium">
+              Propias: <b>{conteoPropia}</b>
+            </span>
+            <span className="text-sm bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-medium">
+              Franquicias: <b>{conteoFranquicia}</b>
+            </span>
+            <div className="w-px h-6 bg-slate-200" />
+          </div>
+
           {user?.role === "COORDINADOR" && (
-            <span className="text-sm bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-medium">
-              Total: <b>{conteoTotal}</b> farmacia
-              {conteoTotal !== 1 ? "s" : ""}
+            <div className="relative shrink-0" ref={dropdownRef}>
+              <button
+                onClick={() => setMostrarConteo(!mostrarConteo)}
+                className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-medium flex items-center gap-2 max-w-[220px]"
+              >
+                <span className="truncate">
+                  {tecnicoFiltro
+                    ? `${tecnicoFiltro}`
+                    : "Total: farmacias por tecnico"}
+                </span>
+                <span className="shrink-0">{mostrarConteo ? "▲" : "▼"}</span>
+              </button>
+
+              {mostrarConteo && (
+                <div className="absolute top-8 left-0 z-10 bg-white border border-slate-200 rounded-lg shadow-xl p-2 min-w-108 max-h-84 overflow-y-auto">
+                  {tecnicoFiltro && (
+                    <div
+                      onClick={() => {
+                        setTecnicoFiltro(null);
+                        setMostrarConteo(false);
+                      }}
+                      className="flex justify-center text-sm px-2 py-1 mb-1 hover:bg-red-50 text-red-500 rounded cursor-pointer border-b border-slate-100"
+                    >
+                      Quitar Filtro
+                    </div>
+                  )}
+                  {conteoPorTecnico.map(({ tecnico, total }) => (
+                    <div
+                      key={tecnico}
+                      onClick={() => {
+                        setTecnicoFiltro(tecnico);
+                        setMostrarConteo(false);
+                      }}
+                      className="flex justify-between text-sm px-2 py-1 hover:bg-lime-300 rounded"
+                    >
+                      <span className="text-slate-700 group-hover:text-indigo-700 group-hover:font-medium transition-colors">
+                        {tecnico}
+                      </span>
+                      <span className="font-bold text-indigo-600 bg-indigo-50 group-hover:bg-indigo-200 group-hover:text-indigo-800 px-2 py-0.5 rounded-full ml-4 transition-colors">
+                        {total}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {user?.role === "TECNICO" && (
+            <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
+              Tus farmacias: <b>{conteoTotal}</b>
             </span>
           )}
-          <div className="w-px h-6 bg-slate-200" />
-          <span className="text-sm bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full font-medium">
-            Propias: <b>{conteoPropia}</b>
-          </span>
-          <span className="text-sm bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full font-medium">
-            Franquicias: <b>{conteoFranquicia}</b>
-          </span>
-          <div className="w-px h-6 bg-slate-200" /> {/* separador */}
         </div>
-        {user?.role === "COORDINADOR" && (
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setMostrarConteo(!mostrarConteo)}
-              className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-medium flex items-center gap-2"
-            >
-              {tecnicoFiltro
-                ? `${tecnicoFiltro}`
-                : "Total: farmacias por tecnico"}
-              <span>{mostrarConteo ? "▲" : "▼"}</span>
-            </button>
 
-            {mostrarConteo && (
-              <div className="absolute top-8 left-0 z-10 bg-white border border-slate-200 rounded-lg shadow-xl p-2 min-w-108 max-h-84 overflow-y-auto">
-                {/* opcion de limpiar filtro */}
-                {tecnicoFiltro && (
-                  <div
-                    onClick={() => {
-                      setTecnicoFiltro(null);
-                      setMostrarConteo(false);
-                    }}
-                    className="flex justify-center text-sm px-2 py-1 mb-1 hover:bg-red-50 text-red-500 rounded cursor-pointer border-b border-slate-100"
-                  >
-                    Quitar Filtro
-                  </div>
-                )}
-                {conteoPorTecnico.map(({ tecnico, total }) => (
-                  <div
-                    key={tecnico}
-                    onClick={() => {
-                      setTecnicoFiltro(tecnico);
-                      setMostrarConteo(false);
-                    }}
-                    className="flex justify-between text-sm px-2 py-1 hover:bg-lime-300 rounded"
-                  >
-                    <span className="text-slate-700 group-hover:text-indigo-700 group-hover:font-medium transition-colors">
-                      {tecnico}
-                    </span>
-                    <span className="font-bold text-indigo-600 bg-indigo-50 group-hover:bg-indigo-200 group-hover:text-indigo-800 px-2 py-0.5 rounded-full ml-4 transition-colors">
-                      {total}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-        {user?.role === "TECNICO" && (
-          // Técnico solo ve su conteo
-          <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full">
-            Tus farmacias: <b>{conteoTotal}</b>
-          </span>
-        )}
-        <div>
-          <div className="flex items-center gap-2 ml-auto shrink-0">
-            <label className="flex items-center cursor-pointer gap-2 bg-gray-100 p-2 rounded-md shrink-0">
-              <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                Ver Inactivos
-              </span>
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={mostrarInactivos}
-                onChange={() => setMostrarInactivos(!mostrarInactivos)}
-              />
-              <div className="relative w-9 h-5 bg-neutral-quaternary rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600 dark:peer-checked:bg-teal-600"></div>
-            </label>
+        {/* BLOQUE DERECHO: siempre en la misma fila, nunca se desplaza */}
+        <div className="flex items-center gap-2 shrink-0">
+          <label className="flex items-center cursor-pointer gap-2 bg-gray-100 p-2 rounded-md shrink-0">
+            <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
+              Ver Inactivos
+            </span>
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={mostrarInactivos}
+              onChange={() => setMostrarInactivos(!mostrarInactivos)}
+            />
+            <div className="relative w-9 h-5 bg-neutral-quaternary rounded-full peer dark:bg-gray-700 peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-teal-600 dark:peer-checked:bg-teal-600"></div>
+          </label>
 
-            {user?.role === "COORDINADOR" && (
+          {user?.role === "COORDINADOR" && (
+            <>
               <button
                 disabled={habilitarBoton}
                 onClick={handleSincronizar}
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md shadow transition-all shrink-0"
+                title="Sincronizar Matriz"
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white p-2 lg:px-4 lg:py-2 rounded-md shadow transition-all shrink-0 disabled:opacity-50"
               >
                 <RefreshCcw
-                  className={`w-4 h-4 ${isSyn ? "animate-spin" : ""}`}
+                  className={`w-4 h-4 shrink-0 ${isSyn ? "animate-spin" : ""}`}
                 />
-                <span className="hidden lg:inline whitespace-nowrap">
+                <span className="hidden xl:inline whitespace-nowrap">
                   {isSyn ? "Sincronizando..." : "Sincronizar Matriz"}
                 </span>
               </button>
-            )}
-          </div>
+
+              <button
+                disabled={isExportando}
+                onClick={handlerExportar}
+                title="Exportar a Excel"
+                className="flex items-center gap-2 bg-green-700 hover:bg-green-800 text-white p-2 lg:px-4 lg:py-2 rounded-md shadow transition-all shrink-0 disabled:opacity-50"
+              >
+                <FileSpreadsheet
+                  className={`w-4 h-4 shrink-0 ${isExportando ? "animate-pulse" : ""}`}
+                />
+                <span className="hidden xl:inline whitespace-nowrap">
+                  {isExportando ? "Exportando..." : "Exportar"}
+                </span>
+              </button>
+            </>
+          )}
         </div>
       </div>
       <FarmaciaModal
