@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Soporte TI",
+  title: "Soporte 360",
   description: "Gestion de información de Soporte",
 };
 

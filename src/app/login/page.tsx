@@ -1,11 +1,13 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
+import Image from "next/image";
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [background, setBackground] = useState(0);
   // manejador de evento de ingreso
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); // Evita que la página se recargue
@@ -32,15 +34,31 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBackground((prev) => (prev === 0 ? 1 : 0));
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+  //<div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
-        <div className="text-center mb-10">
+    <div className="relative min-h-screen overflow-hidden bg-slate-50 flex items-center justify-center p-4">
+      {/* Login  */}
+      <div className="relative z-10 max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+        <div className="text-center mb-0">
           <h1 className="text-3xl font-bold text-slate-900">Bienvenido</h1>
-          <p className="text-center text-xs text-slate-400 mt-8 uppercase tracking-widest text-slate-400">
-            Soporte Técnico TI
-          </p>
+          {/* <p className="text-center text-xs text-slate-400 mt-8 uppercase tracking-widest text-slate-400">
+            Soporte 360
+          </p> */}
+          <div className="flex justify-center mb-2">
+            <Image
+              src="/soporte-360.svg"
+              alt="Soporte 360"
+              width={180}
+              height={80}
+              priority
+            />
+          </div>
         </div>
 
         <form className="space-y-6" onSubmit={handleSubmit}>

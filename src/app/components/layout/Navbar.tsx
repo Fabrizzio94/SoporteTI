@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Usuario } from "@/app/types/tecnico";
 import { MonitorCog } from "lucide-react";
+import Image from "next/image";
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
@@ -33,10 +34,17 @@ export default function Navbar() {
         <div className="flex items-center gap-2 font-semibold">
           <div className="w-8 h-8 bg-white rounded flex items-center justify-center">
             <span className="text-blue-600 hover:underline">
-              <MonitorCog color="#000000" />
+              {/* <MonitorCog color="#000000" /> */}
+              <Image
+                src="/soporte-360.svg"
+                alt="Soporte 360"
+                width={180}
+                height={80}
+                priority
+              />
             </span>
           </div>
-          <span>Soporte TI</span>
+          <span>Soporte 360</span>
         </div>
 
         <nav className="flex gap-4 text-sm">
@@ -62,6 +70,9 @@ export default function Navbar() {
           </Link>
           <Link href="/misactivos" className="hover:text-indigo-300">
             Mis Activos
+          </Link>
+          <Link href="/pedidosequipos" className="hover:text-indigo-300">
+            Pedidos
           </Link>
         </nav>
       </div>
