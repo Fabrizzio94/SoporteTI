@@ -144,12 +144,15 @@ export default function ActividadModal({
             <h2 className="text-sm font-bold text-slate-800">
               Detalle de Baja ·{" "}
               <span className="font-mono text-indigo-500">
+                {actividad.nombre_activo}
+                {" : "}
                 {actividad.codigo_activo}
               </span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">
-              {actividad.nombre_activo} · {actividad.oficina} ·{" "}
               {actividad.nombre_farmacia}
+              {" - "}
+              {actividad.oficina}
             </p>
           </div>
           <button
@@ -181,13 +184,22 @@ export default function ActividadModal({
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-400 mb-1">Año Compra</p>
+                <p className="text-xs text-slate-400 mb-1">Fecha Compra</p>
                 <p className="text-sm font-medium text-slate-700">
-                  {actividad.ano_compra ?? "—"}
+                  {actividad.fecha_compra
+                    ? new Date(actividad.fecha_compra).toLocaleDateString(
+                        "es-EC",
+                        {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        },
+                      )
+                    : "—"}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-400 mb-1">Tipo</p>
+                <p className="text-xs text-slate-400 mb-1">Estado</p>
                 <span
                   className={`inline-flex text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                     esFranquicia

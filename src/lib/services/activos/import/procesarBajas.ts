@@ -1,5 +1,3 @@
-import sql from "mssql"
-import type { ConnectionPool } from "mssql"
 import type { ProcesarBajasParams } from "@/app/types/activo";
 
 import { ACTIVOS_PERMITIDOS, extraerCodigoAnterior, extraerAnoCompra } from "@/lib/helpers/excelHelpers";

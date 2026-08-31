@@ -6,7 +6,7 @@ export const actualizarActivoExistente = async ({
     pool,
     codigoActivo,
     nombreActivo,
-    anoCompra,
+    fechaCompra,
     detalle,
     farmacia,
     activoEnBD,
@@ -22,7 +22,10 @@ export const actualizarActivoExistente = async ({
     await pool.request()
         .input("codigo_activo", codigoActivo)
         .input("nombre_activo", nombreActivo)
-        .input("ano_compra", anoCompra)
+        /* se debe borrar del update el fecha_compra luego de carga de excel para colocar fechas reales
+        en produccion, luego dejar con la fecha que es y no actualizar, si viene uno nuevo, lo inserta
+        pero no actualiza para mantener el año real */
+        .input("fecha_compra", fechaCompra)
         .input("descripcion", detalle)
         .input("oficina", farmacia.oficina)
         .input("cedula_tecnico", farmacia.cedula_tecnico ?? null)
@@ -37,6 +40,7 @@ export const actualizarActivoExistente = async ({
             cedula_tecnico= @cedula_tecnico,
             nombre_custodio=@nombre_custodio,
             centro_costo  = @centro_costo,
+            fecha_compra  = @fecha_compra,
             estado        = 'A'
           WHERE codigo_activo = @codigo_activo
         `);
@@ -71,18 +75,18 @@ export const actualizarActivoExistente = async ({
         .input("oficina", farmacia.oficina)
         .input("cedula_tecnico", activoEnBD.cedula_tecnico ?? null)
         .input("nombre_tecnico", activoEnBD.nombre_tecnico ?? "Automático")
-        .input("ano_compra", anoCompra ?? null)
+        .input("fecha_compra", fechaCompra ?? null)
         .input("tipo_baja", TipoBaja.REACTIVADO_EXCEL)
         .input("verificado", 1)
         .input("fecha_verificacion", new Date())
         .query(`
                 INSERT INTO historico_activo (
                 codigo_activo, nombre_activo, oficina, cedula_tecnico,
-                nombre_tecnico, ano_compra, motivo_baja,
+                nombre_tecnico, fecha_compra, motivo_baja,
                 tipo_baja, verificado, fecha_verificacion
                 ) VALUES (
                 @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
-                @nombre_tecnico, @ano_compra,
+                @nombre_tecnico, @fecha_compra,
                 'Reactivado — vuelve a aparecer en carga Excel',
                 @tipo_baja, @verificado, @fecha_verificacion
                 )

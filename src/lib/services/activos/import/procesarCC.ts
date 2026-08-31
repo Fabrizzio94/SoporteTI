@@ -3,7 +3,7 @@ export const procesarCC = async ({
     pool,
     codigoActivo,
     nombreActivo,
-    anoCompra,
+    fechaCompra,
     detalle,
     nombreCustodio,
     activosEnBD,
@@ -39,13 +39,13 @@ export const procesarCC = async ({
         await pool.request()
             .input("codigo_activo", codigoActivo)
             .input("nombre_activo", nombreActivo)
-            .input("ano_compra", anoCompra)
+            .input("fecha_compra", fechaCompra)
             .input("descripcion", detalle)
             .input("nombre_custodio", nombreCustodio)
             .input("cedula_tecnico", cedulaTecnico)
             .query(`
-                INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, nombre_custodio)
-                VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @nombre_custodio)`
+                INSERT INTO activo (codigo_activo, nombre_activo, fecha_compra, descripcion, estado, nombre_custodio)
+                VALUES (@codigo_activo, @nombre_activo, @fecha_compra, @descripcion, 'A', @nombre_custodio)`
             );
         resumen.insertados++;
         activosEnBD.set(codigoActivo, {
@@ -54,7 +54,7 @@ export const procesarCC = async ({
             nombre_activo: nombreActivo,
             oficina: null,
             cedula_tecnico: null,
-            ano_compra: anoCompra,
+            fecha_compra: fechaCompra,
             tipo_farmacia: null,
             nombre_tecnico: null,
         });

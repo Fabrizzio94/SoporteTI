@@ -174,18 +174,18 @@ export const reactivarActividad = async (data: {
     .input("oficina", data.nueva_oficina ?? hist.oficina)
     .input("cedula_tecnico", hist.cedula_tecnico ?? null)
     .input("nombre_tecnico", hist.nombre_tecnico ?? null)
-    .input("ano_compra", hist.ano_compra ?? null)
+    .input("fecha_compra", hist.fecha_compra ?? null)
     .input("motivo_baja", data.nueva_oficina ? "Reactivado y Reasignado a otra farmacia" : "Reactivado")
     .input("observacion", data.observacion ?? null)
     .input("tipo_baja", TipoBaja.REACTIVADO_MANUAL)
     .query(`
       INSERT INTO historico_activo (
         codigo_activo, nombre_activo, oficina, cedula_tecnico,
-        nombre_tecnico, ano_compra, motivo_baja, observacion,
+        nombre_tecnico, fecha_compra, motivo_baja, observacion,
         tipo_baja
       ) VALUES (
         @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
-        @nombre_tecnico, @ano_compra, @motivo_baja, @observacion,
+        @nombre_tecnico, @fecha_compra, @motivo_baja, @observacion,
         @tipo_baja
       )
     `);

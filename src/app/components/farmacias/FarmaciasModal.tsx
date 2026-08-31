@@ -155,7 +155,7 @@ export default function FarmaciaModal({
           body: JSON.stringify({
             codigo_activo: farmacia.codigo_servidor,
             nombre_activo: "CPU",
-            ano_compra: farmacia.ano_servidor ?? null,
+            //fecha_compra: farmacia.ano_servidor ?? null,
             descripcion: null,
             oficina: farmacia.oficina,
             so_servidor: soServidor || null,

@@ -9,7 +9,7 @@ export type Actividad = {
   nombre_tecnico?: string;
   motivo_baja?: string;
   observacion?: string;
-  ano_compra?: number;
+  fecha_compra?: Date;
   codigo_reemplazo?: string;
   fecha_baja: string;
   tipo_baja: TipoBaja;

@@ -58,7 +58,7 @@ export const obtenerFarmacias = async (rol: string, cedula: string,
     OUTER APPLY (
       SELECT TOP 1
         a.codigo_activo,
-        a.ano_compra,
+        a.fecha_compra,
         s.so_servidor,
         s.tipo_ram,
         s.ram,
@@ -68,7 +68,7 @@ export const obtenerFarmacias = async (rol: string, cedula: string,
       WHERE a.oficina = f.oficina
         AND a.nombre_activo = 'CPU'
         AND a.estado = 'A'
-      ORDER BY s.es_principal DESC, a.ano_compra DESC
+      ORDER BY s.es_principal DESC, YEAR(a.fecha_compra) DESC
     ) AS srv
     ${whereClause}
   `;
@@ -81,7 +81,7 @@ export const obtenerFarmacias = async (rol: string, cedula: string,
         f.*,
         t.apellidos + ' ' + t.nombres AS nombre_tecnico,
         srv.codigo_activo AS codigo_servidor,
-        srv.ano_compra    AS ano_servidor,
+        YEAR(srv.fecha_compra)    AS ano_servidor,
         srv.so_servidor,
         srv.tipo_ram,
         srv.ram,
@@ -202,7 +202,7 @@ export const obtenerFarmaciasParaExportar = async () => {
       f.tipo_farmacia,
       f.marca,
       srv.codigo_activo,
-      srv.ano_compra,
+      YEAR(srv.fecha_compra) AS ano_compra,
       srv.so_servidor,
       srv.tipo_ram,
       srv.ram,
@@ -216,7 +216,7 @@ export const obtenerFarmaciasParaExportar = async () => {
     OUTER APPLY (
       SELECT TOP 1
         a.codigo_activo,
-        a.ano_compra,
+        a.fecha_compra,
         s.so_servidor,
         s.tipo_ram,
         s.ram,
@@ -226,7 +226,7 @@ export const obtenerFarmaciasParaExportar = async () => {
       WHERE a.oficina = f.oficina
         AND a.nombre_activo = 'CPU'
         AND a.estado = 'A'
-      ORDER BY s.es_principal DESC, a.ano_compra DESC
+      ORDER BY s.es_principal DESC, a.fecha_compra DESC
     ) AS srv
      WHERE f.estado = 'A'
      ORDER BY t.apellidos ASC, t.nombres ASC

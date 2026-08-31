@@ -60,7 +60,7 @@ export const obtenerActivos = async (rol: string, cedula: string,
       SELECT
         a.codigo_activo,
         a.nombre_activo,
-        a.ano_compra,
+        a.fecha_compra,
         a.descripcion,
         a.estado,
         a.oficina,
@@ -97,22 +97,22 @@ export const obtenerActivos = async (rol: string, cedula: string,
 
 };
 export const crearActivo = async (data: Pick<Activo,
-  "codigo_activo" | "nombre_activo" | "ano_compra" | "descripcion"
+  "codigo_activo" | "nombre_activo" | "fecha_compra" | "descripcion"
   | "oficina" | "virtualizer" | "ram" | "tipo_ram" | "so_servidor">) => {
   const pool = await getConnection();
   const centroCosto = await obtenerCentroCosto(data.oficina);
   await pool.request()
     .input("codigo_activo", data.codigo_activo)
     .input("nombre_activo", data.nombre_activo)
-    .input("ano_compra", data.ano_compra ?? null)
+    .input("fecha_compra", data.fecha_compra ?? null)
     .input("descripcion", data.descripcion ?? null)
     .input("oficina", data.oficina)
     .input("centro_costo", centroCosto)
     .query(`
     IF NOT EXISTS (SELECT 1 FROM activo WHERE codigo_activo = @codigo_activo)
     BEGIN
-      INSERT INTO activo (codigo_activo, nombre_activo, ano_compra, descripcion, estado, oficina, control_importacion, centro_costo)
-      VALUES (@codigo_activo, @nombre_activo, @ano_compra, @descripcion, 'A', @oficina,0, @centro_costo)
+      INSERT INTO activo (codigo_activo, nombre_activo, descripcion, estado, oficina, control_importacion, centro_costo,fecha_compra)
+      VALUES (@codigo_activo, @nombre_activo, @descripcion, 'A', @oficina,0, @centro_costo, @fecha_compra)
     END
   `);
 
@@ -136,21 +136,22 @@ export const crearActivo = async (data: Pick<Activo,
 };
 
 export const actualizarActivo = async (data: Pick<Activo,
-  "codigo_activo" | "nombre_activo" | "ano_compra" | "descripcion"
+  "codigo_activo" | "nombre_activo" | "fecha_compra" | "descripcion"
   | "oficina" | "virtualizer" | "ram" | "tipo_ram" | "so_servidor" | "es_principal">) => {
   const pool = await getConnection();
   const centroCosto = await obtenerCentroCosto(data.oficina);
+  const sql = require("mssql");
   await pool.request()
     .input("codigo_activo", data.codigo_activo)
     .input("nombre_activo", data.nombre_activo)
-    .input("ano_compra", data.ano_compra ?? null)
+    .input("fecha_compra", sql.Date, data.fecha_compra ?? null)
     .input("descripcion", data.descripcion ?? null)
     .input("oficina", data.oficina)
     .input("centro_costo", centroCosto)
     .query(`
       UPDATE activo SET
         nombre_activo = @nombre_activo,
-        ano_compra    = @ano_compra,
+        fecha_compra  = COALESCE(@fecha_compra, fecha_compra),
         descripcion   = @descripcion,
         oficina       = @oficina,
         centro_costo  = @centro_costo

@@ -134,7 +134,7 @@ SoporteTI es una aplicación web interna para la gestión de farmacias, activos 
                         │ (PK)        │
                         │ nombre_     │
                         │ activo      │
-                        │ ano_compra  │
+                        │ fecha_compra│
                         │ descripcion │
                         │ estado      │
                         │ oficina(FK) │

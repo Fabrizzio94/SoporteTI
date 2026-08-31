@@ -47,7 +47,7 @@ export const procesarBajaActivo = async (
     .input("cedula_tecnico", activo.cedula_tecnico ?? null)
     .input("motivo_baja", motivo_baja)
     .input("observacion", observacion ?? null)
-    .input("ano_compra", activo.ano_compra ?? null)
+    .input("fecha_compra", activo.fecha_compra ?? null)
     .input("codigo_reemplazo", codigo_reemplazo ?? null)
     .input("nombre_tecnico", nombreTecnico)
     .input("tipo_baja", TipoBaja.MANUAL)
@@ -56,11 +56,11 @@ export const procesarBajaActivo = async (
     .query(`
       INSERT INTO historico_activo (
         codigo_activo, nombre_activo, oficina, cedula_tecnico,
-        motivo_baja, observacion, ano_compra, codigo_reemplazo,
+        motivo_baja, observacion, fecha_compra, codigo_reemplazo,
         nombre_tecnico, tipo_baja, verificado, fecha_verificacion
       ) VALUES (
         @codigo_activo, @nombre_activo, @oficina, @cedula_tecnico,
-        @motivo_baja, @observacion, @ano_compra, @codigo_reemplazo,
+        @motivo_baja, @observacion, @fecha_compra, @codigo_reemplazo,
         @nombre_tecnico, @tipo_baja, @verificado, @fecha_verificacion
       )
     `);

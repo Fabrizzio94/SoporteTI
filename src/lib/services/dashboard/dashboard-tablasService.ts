@@ -72,7 +72,7 @@ export const obtenerDatosTablaDashboard = async (rol: string, cedula: string) =>
     // anoCompraServidor — agrupado por año ascendente
     pool.request().query(`
       SELECT
-        COALESCE(CAST(a.ano_compra AS VARCHAR), 'Sin datos') AS nombre,
+        COALESCE(CAST(YEAR(a.fecha_compra) AS VARCHAR), 'Sin datos') AS nombre,
         SUM(CASE WHEN f.tipo_farmacia = 'Propia'     THEN 1 ELSE 0 END) AS propias,
         SUM(CASE WHEN f.tipo_farmacia = 'Franquicia' THEN 1 ELSE 0 END) AS franquicias,
         SUM(CASE WHEN f.tipo_farmacia IS NULL         THEN 1 ELSE 0 END) AS sin_tipo,
@@ -84,8 +84,8 @@ export const obtenerDatosTablaDashboard = async (rol: string, cedula: string) =>
       AND a.estado = 'A' 
       AND s.es_principal = 1
       ${whereExtra}
-      GROUP BY a.ano_compra
-      ORDER BY a.ano_compra ASC
+      GROUP BY YEAR(a.fecha_compra)
+      ORDER BY YEAR(a.fecha_compra) ASC
     `),
   ]);
 

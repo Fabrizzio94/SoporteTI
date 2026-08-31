@@ -65,7 +65,13 @@ export default function ActivosTable({ activos, onEdit }: Props) {
                   {a.nombre_tecnico ?? "—"}
                 </td>
                 <td className="px-4 py-3 text-sm text-slate-600">
-                  {a.ano_compra ?? "—"}
+                  {a.fecha_compra
+                    ? new Date(a.fecha_compra).toLocaleDateString("es-EC", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })
+                    : "—"}
                 </td>
                 <td className="px-4 py-3">
                   <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full">

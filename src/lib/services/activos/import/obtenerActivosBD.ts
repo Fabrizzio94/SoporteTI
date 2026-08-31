@@ -9,7 +9,7 @@ export async function obtenerActivosBD(pool: ConnectionPool) {
         a.nombre_activo,
         a.oficina,
         a.cedula_tecnico,
-        a.ano_compra,
+        a.fecha_compra,
         a.control_importacion,
         f.tipo_farmacia,
         t.apellidos + ' ' + t.nombres AS nombre_tecnico

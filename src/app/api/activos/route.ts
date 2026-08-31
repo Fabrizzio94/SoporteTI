@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         if (!session)
             return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-        const { codigo_activo, nombre_activo, ano_compra, descripcion, oficina,
+        const { codigo_activo, nombre_activo, fecha_compra, descripcion, oficina,
             virtualizer, ram, tipo_ram, so_servidor } = await req.json();
 
         if (!codigo_activo || !nombre_activo || !oficina)
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
         const resultado = await crearActivo({
             codigo_activo,
             nombre_activo,
-            ano_compra: ano_compra ?? null,
+            fecha_compra: fecha_compra ?? null,
             descripcion: descripcion ?? null,
             oficina,
             virtualizer, ram, tipo_ram, so_servidor,
@@ -85,7 +85,7 @@ export async function PUT(req: Request) {
         if (!session)
             return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-        const { codigo_activo, nombre_activo, ano_compra, descripcion, oficina,
+        const { codigo_activo, nombre_activo, fecha_compra, descripcion, oficina,
             virtualizer, ram, tipo_ram, so_servidor, es_principal } = await req.json();
 
         if (!codigo_activo)
@@ -94,7 +94,7 @@ export async function PUT(req: Request) {
         const resultado = await actualizarActivo({
             codigo_activo,
             nombre_activo,
-            ano_compra: ano_compra ?? null,
+            fecha_compra: fecha_compra ?? null,
             descripcion: descripcion ?? null,
             oficina,
             virtualizer, ram, tipo_ram, so_servidor, es_principal,

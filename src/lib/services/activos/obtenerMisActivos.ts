@@ -21,7 +21,7 @@ export const obtenerMisActivos = async (cedula: string) => {
       SELECT
         a.codigo_activo,
         a.nombre_activo,
-        a.ano_compra,
+        a.fecha_compra,
         a.estado,
         a.nombre_custodio,
         COALESCE(f.nombre, 'CONTACT CENTER OPERATIVO') AS nombre_farmacia,

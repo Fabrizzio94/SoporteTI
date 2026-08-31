@@ -3,7 +3,8 @@ import { Farmacia } from "./farmacia";
 export type Activo = {
     codigo_activo: string;
     nombre_activo: string;
-    ano_compra: number | null;
+    fecha_compra: string | null;
+    //ano_compra: number | null;
     descripcion: string | null;
     estado: string;
     oficina: string;
@@ -65,7 +66,8 @@ export interface ProcesarCCParams {
     pool: ConnectionPool;
     codigoActivo: string;
     nombreActivo: string;
-    anoCompra: number | null;
+    fechaCompra: Date | null;
+    //anoCompra: number | null;
     detalle: string | null;
     nombreCustodio: string | null;
     activosEnBD: Map<string, any>;
@@ -75,7 +77,8 @@ export interface ActualizarActivoExistenteParams {
     pool: ConnectionPool;
     codigoActivo: string;
     nombreActivo: string;
-    anoCompra: number | null;
+    fechaCompra: Date | null;
+    //anoCompra: number | null;
     detalle: string | null;
     farmacia: Farmacia;
     activoEnBD: any;
@@ -87,7 +90,8 @@ export interface InsertarActivoNuevoParams {
     pool: ConnectionPool;
     codigoActivo: string;
     nombreActivo: string;
-    anoCompra: number | null;
+    fechaCompra: Date | null;
+    //anoCompra: number | null;
     detalle: string | null;
     farmacia: Farmacia;
     activosEnBD: any;
@@ -101,6 +105,7 @@ export type MiActivo = {
     oficina: string | null;
     nombre_farmacia?: string;
     nombre_custodio?: string | null;
-    ano_compra: number | null;
+    fecha_compra: string | null;
+    //ano_compra: number | null;
     estado: string;
 };

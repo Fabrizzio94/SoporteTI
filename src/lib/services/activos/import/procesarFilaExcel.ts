@@ -1,4 +1,4 @@
-import { ACTIVOS_PERMITIDOS, extraerCodigoAnterior, extraerAnoCompra } from "@/lib/helpers/excelHelpers";
+import { ACTIVOS_PERMITIDOS, extraerCodigoAnterior, extraerAnoCompra, extraerFechaCompra } from "@/lib/helpers/excelHelpers";
 import type { ProcesarFilaParams } from "@/app/types/activo"
 import { procesarServidor } from "./procesarServidor";
 import { procesarCambioCodigo } from "./procesarCambioCodigo";
@@ -39,10 +39,10 @@ export const procesarFilaExcel = async ({
 
     if (!ACTIVOS_PERMITIDOS.has(nombreActivo)) return;
 
-    const anoCompra = fechaAlta instanceof Date
-        ? fechaAlta.getFullYear()
-        : fechaAlta ? new Date(fechaAlta).getFullYear() : null;
-
+    /*     const anoCompra = fechaAlta instanceof Date
+            ? fechaAlta.getFullYear()
+            : fechaAlta ? new Date(fechaAlta).getFullYear() : null; */
+    const fechaCompra = extraerFechaCompra(fechaAlta);
     //const farmacia = farmacias.find((f: any) => f.nombre.toUpperCase() === centroCostoOrigen);
     const farmacia = farmaciasPorCentroCosto.get(centroCosto);
     const esContactCenter = centroCosto === "1102901600";
@@ -52,7 +52,7 @@ export const procesarFilaExcel = async ({
             pool,
             codigoActivo,
             nombreActivo,
-            anoCompra,
+            fechaCompra,
             detalle,
             nombreCustodio,
             activosEnBD,
@@ -79,7 +79,7 @@ export const procesarFilaExcel = async ({
             pool,
             codigoActivo,
             nombreActivo,
-            anoCompra,
+            fechaCompra,
             detalle,
             farmacia,
             activoEnBD,
@@ -92,7 +92,7 @@ export const procesarFilaExcel = async ({
             pool,
             codigoActivo,
             nombreActivo,
-            anoCompra,
+            fechaCompra,
             detalle,
             farmacia,
             activosEnBD,

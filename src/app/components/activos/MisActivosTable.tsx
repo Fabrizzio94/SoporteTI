@@ -63,7 +63,13 @@ export default function MisActivosTable({ activos, onEdit, loading }: Props) {
                   {a.nombre_farmacia ?? "—"}
                 </td>
                 <td className="px-4 py-3 text-slate-600">
-                  {a.ano_compra ?? "—"}
+                  {a.fecha_compra
+                    ? new Date(a.fecha_compra).toLocaleString("es-EC", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })
+                    : "—"}
                 </td>
                 <td className="px-4 py-3">
                   <span

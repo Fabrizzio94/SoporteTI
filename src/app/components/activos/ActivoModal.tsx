@@ -49,7 +49,7 @@ export default function ActivoModal({
 }: Props) {
   const [codigoActivo, setCodigoActivo] = useState("");
   const [nombreActivo, setNombreActivo] = useState("");
-  const [anoCompra, setAnoCompra] = useState("");
+  const [fechaCompra, setfechaCompra] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [oficina, setOficina] = useState("");
   // Servidor
@@ -73,7 +73,8 @@ export default function ActivoModal({
     if (activo) {
       setCodigoActivo(activo.codigo_activo ?? "");
       setNombreActivo(activo.nombre_activo ?? "");
-      setAnoCompra(activo.ano_compra?.toString() ?? "");
+      //setfechaCompra(activo.fecha_compra?.toString() ?? "");
+      setfechaCompra(formatearParaInputDate(activo.fecha_compra ?? ""));
       setDescripcion(activo.descripcion ?? "");
       setOficina(activo.oficina ?? "");
       setVirtualizer(activo.virtualizer ?? "");
@@ -84,7 +85,7 @@ export default function ActivoModal({
     } else {
       setCodigoActivo("");
       setNombreActivo("");
-      setAnoCompra("");
+      setfechaCompra("");
       setDescripcion("");
       setOficina("");
       setVirtualizer("");
@@ -121,7 +122,7 @@ export default function ActivoModal({
         body: JSON.stringify({
           codigo_activo: codigoActivo,
           nombre_activo: nombreActivo,
-          ano_compra: anoCompra ? parseInt(anoCompra) : null,
+          fecha_compra: fechaCompra || null,
           descripcion: descripcion || null,
           oficina,
           ...(isServidor && {
@@ -168,7 +169,12 @@ export default function ActivoModal({
       toast.error("Error al dar de baja", { id: loading });
     }
   };
-
+  const formatearParaInputDate = (fecha: string | Date | null): string => {
+    if (!fecha) return "";
+    const d = new Date(fecha);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0]; // "yyyy-mm-dd"
+  };
   if (!open) return null;
 
   return (
@@ -290,9 +296,10 @@ export default function ActivoModal({
                   </label>
                   <input
                     className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
-                    value={anoCompra}
-                    onChange={(e) => setAnoCompra(e.target.value)}
-                    onKeyDown={(e) => {
+                    value={fechaCompra}
+                    onChange={(e) => setfechaCompra(e.target.value)}
+                    disabled={isEditing}
+                    /* onKeyDown={(e) => {
                       // Permitir: números, backspace, delete, tab, arrows
                       const permitidos = [
                         "Backspace",
@@ -306,9 +313,8 @@ export default function ActivoModal({
                       if (!/^\d$/.test(e.key) && !permitidos.includes(e.key)) {
                         e.preventDefault();
                       }
-                    }}
-                    placeholder="2024"
-                    type="number"
+                    }} */
+                    type="date"
                   />
                 </div>
               </div>

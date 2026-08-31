@@ -49,7 +49,7 @@ export const validarColumnas = (rows: any[]): string[] => {
     const primeraFila = rows[0];
     return COLUMNAS_REQUERIDAS.filter((c) => !(c in primeraFila));
 };
-
+// por borrar
 export const extraerAnoCompra = (fechaAlta: any): number | null => {
     if (fechaAlta instanceof Date) return fechaAlta.getFullYear();
     if (fechaAlta) return new Date(fechaAlta).getFullYear();
@@ -90,4 +90,12 @@ export const obtenerUltimoHistorico = async (
             ORDER BY fecha_baja DESC
             `);
     return result.recordset[0] ?? null;
+}
+export const extraerFechaCompra = (fechaAlta: any): Date | null => {
+    if (fechaAlta instanceof Date) return fechaAlta;
+    if (fechaAlta) {
+        const d = new Date(fechaAlta);
+        return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
 }
