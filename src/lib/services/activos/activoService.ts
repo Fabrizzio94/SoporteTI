@@ -1,5 +1,7 @@
 import { getConnection } from "@/lib/db";
 import { Activo } from "@/app/types/activo";
+import sql from "mssql";
+import { guardarServidorEsCPU, marcarComoPrincipal, obtenerPrincipalActual } from "@/lib/helpers/servidorHelper";
 
 export const obtenerActivos = async (rol: string, cedula: string,
   filtros: {
@@ -72,7 +74,8 @@ export const obtenerActivos = async (rol: string, cedula: string,
         s.ram,
         s.tipo_ram,
         s.so_servidor,
-        a.centro_costo
+        a.centro_costo,
+        s.es_principal
       FROM activo a
       INNER JOIN farmacia f ON f.oficina = a.oficina
       LEFT JOIN tecnicos t  ON t.cedula  = f.cedula_tecnico
@@ -98,7 +101,7 @@ export const obtenerActivos = async (rol: string, cedula: string,
 };
 export const crearActivo = async (data: Pick<Activo,
   "codigo_activo" | "nombre_activo" | "fecha_compra" | "descripcion"
-  | "oficina" | "virtualizer" | "ram" | "tipo_ram" | "so_servidor">) => {
+  | "oficina" | "virtualizer" | "ram" | "tipo_ram" | "so_servidor" | "es_principal">) => {
   const pool = await getConnection();
   const centroCosto = await obtenerCentroCosto(data.oficina);
   await pool.request()
@@ -115,24 +118,9 @@ export const crearActivo = async (data: Pick<Activo,
       VALUES (@codigo_activo, @nombre_activo, @descripcion, 'A', @oficina,0, @centro_costo, @fecha_compra)
     END
   `);
+  const esPrincipalFinal = await guardarServidorEsCPU(pool, data);
+  return { ok: true, es_principal: esPrincipalFinal };
 
-  if (data.nombre_activo === "CPU") {
-    await pool.request()
-      .input("codigo_activo", data.codigo_activo)
-      .input("virtualizer", data.virtualizer ?? null)
-      .input("ram", data.ram ?? null)
-      .input("tipo_ram", data.tipo_ram ?? null)
-      .input("so_servidor", data.so_servidor ?? null)
-      .query(`
-      IF NOT EXISTS (SELECT 1 FROM servidor WHERE codigo_activo = @codigo_activo)
-      BEGIN
-        INSERT INTO servidor (codigo_activo, virtualizer, ram, tipo_ram, so_servidor)
-        VALUES (@codigo_activo, @virtualizer, @ram, @tipo_ram, @so_servidor)
-      END
-    `);
-  }
-
-  return { ok: true };
 };
 
 export const actualizarActivo = async (data: Pick<Activo,
@@ -157,46 +145,10 @@ export const actualizarActivo = async (data: Pick<Activo,
         centro_costo  = @centro_costo
       WHERE codigo_activo = @codigo_activo
     `);
+  const esPrincipalFinal = await guardarServidorEsCPU(pool, data);
+  return { ok: true, es_principal: esPrincipalFinal };
 
-  if (data.nombre_activo === "CPU") {
-    await pool.request()
-      .input("codigo_activo", data.codigo_activo)
-      .input("virtualizer", data.virtualizer ?? null)
-      .input("ram", data.ram ?? null)
-      .input("tipo_ram", data.tipo_ram ?? null)
-      .input("so_servidor", data.so_servidor ?? null)
-      .query(`
-        MERGE INTO servidor AS D
-        USING (SELECT @codigo_activo AS codigo_activo) AS O
-          ON D.codigo_activo = O.codigo_activo
-        WHEN MATCHED THEN
-          UPDATE SET
-            virtualizer = @virtualizer,
-            ram         = @ram,
-            tipo_ram    = @tipo_ram,
-            so_servidor = @so_servidor
-        WHEN NOT MATCHED THEN
-          INSERT (codigo_activo, virtualizer, ram, tipo_ram, so_servidor, es_principal)
-          VALUES (@codigo_activo, @virtualizer, @ram, @tipo_ram, @so_servidor, 0);
-      `);
 
-    if (data.es_principal) {
-      await pool.request()
-        .input("oficina", data.oficina)
-        .input("codigo_activo", data.codigo_activo)
-        .query(`
-          UPDATE servidor SET es_principal = 0
-          WHERE codigo_activo IN (
-            SELECT codigo_activo FROM activo
-            WHERE oficina = @oficina AND nombre_activo = 'CPU'
-          );
-          UPDATE servidor SET es_principal = 1
-          WHERE codigo_activo = @codigo_activo;
-        `);
-    }
-  }
-
-  return { ok: true };
 };
 
 export const verificarCodigoActivo = async (codigo: string) => {

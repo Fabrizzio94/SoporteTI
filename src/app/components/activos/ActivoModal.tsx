@@ -130,6 +130,7 @@ export default function ActivoModal({
             ram: ram !== "" ? parseInt(ram) : null,
             tipo_ram: tipoRam,
             so_servidor: soVer,
+            es_principal: esPrincipal,
           }),
         }),
       });
@@ -265,8 +266,10 @@ export default function ActivoModal({
                     className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-800 outline-none focus:border-indigo-400"
                     value={nombreActivo}
                     onChange={(e) => {
+                      const valor = e.target.value;
                       setNombreActivo(e.target.value);
                       setTab("info");
+                      setEsPrincipal(valor === "CPU");
                     }}
                   >
                     <option value="">Seleccionar...</option>

@@ -50,7 +50,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
         const { codigo_activo, nombre_activo, fecha_compra, descripcion, oficina,
-            virtualizer, ram, tipo_ram, so_servidor } = await req.json();
+            virtualizer, ram, tipo_ram, so_servidor, es_principal } = await req.json();
 
         if (!codigo_activo || !nombre_activo || !oficina)
             return NextResponse.json({ error: "Campos obligatorios faltantes" }, { status: 400 });
@@ -61,7 +61,7 @@ export async function POST(req: Request) {
             fecha_compra: fecha_compra ?? null,
             descripcion: descripcion ?? null,
             oficina,
-            virtualizer, ram, tipo_ram, so_servidor,
+            virtualizer, ram, tipo_ram, so_servidor, es_principal
         });
 
         return NextResponse.json(resultado);
